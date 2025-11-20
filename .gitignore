@@ -32,3 +32,4 @@ out/
 # OS
 Thumbs.db
 
+frontend/.env.local
