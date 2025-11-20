@@ -42,6 +42,28 @@ const gameSchema = new Schema<GameDocument>(
     coverUrl: { type: String },
     gallery: [{ type: String }],
     tags: [{ type: String }],
+    // New media fields
+    trailerUrl: { type: String },
+    gameplayVideoUrl: { type: String },
+    screenshots: [{ type: String }],
+    // Enhanced metadata
+    rating: { type: Number, min: 0, max: 5 },
+    releaseDate: { type: Date },
+    developer: { type: String },
+    publisher: { type: String },
+    ageRating: { type: String },
+    features: [{ type: String }],
+    systemRequirements: {
+      minimum: { type: String },
+      recommended: { type: String }
+    },
+    // SEO & Marketing
+    metaTitle: { type: String },
+    metaDescription: { type: String },
+    featured: { type: Boolean, default: false },
+    onSale: { type: Boolean, default: false },
+    salePrice: { type: Number },
+    // Options and variants
     options: [
       {
         id: { type: String, required: true },

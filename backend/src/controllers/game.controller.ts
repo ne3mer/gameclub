@@ -8,16 +8,18 @@ type GameQuery = {
   safeOnly?: string | boolean;
   search?: string;
   sort?: string;
+  limit?: string;
 };
 
 export const getGames = async (req: Request<unknown, unknown, unknown, GameQuery>, res: Response) => {
-  const { genre, region, safeOnly, search, sort } = req.query;
+  const { genre, region, safeOnly, search, sort, limit } = req.query;
   const games = await listGames({
     genre: genre || undefined,
     region: region || undefined,
     safeOnly: typeof safeOnly === 'boolean' ? safeOnly : safeOnly ? safeOnly === 'true' : undefined,
     search: search || undefined,
-    sort: sort || undefined
+    sort: sort || undefined,
+    limit: limit ? parseInt(limit, 10) : undefined
   });
 
   res.json({ data: games });

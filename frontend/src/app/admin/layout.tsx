@@ -2,53 +2,177 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
+import { useState } from 'react';
+import { AdminGuard } from '@/components/admin/AdminGuard';
+import { Icon } from '@/components/icons/Icon';
+import { X, Menu } from 'lucide-react';
+
+type NavGroup = {
+  title?: string;
+  items: Array<{ href: string; label: string; icon: string; badge?: string }>;
+};
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
+  const [sidebarOpen, setSidebarOpen] = useState(false);
 
-  const links = [
-    { href: '/admin', label: 'داشبورد' },
-    { href: '/admin/products', label: 'محصولات' },
-    { href: '/admin/products/new', label: 'افزودن محصول' },
-    { href: '/admin/home', label: 'محتوای صفحه اصلی' },
-    { href: '/admin/marketing', label: 'بازاریابی' },
-    { href: '/admin/orders', label: 'سفارشات' },
+  const navGroups: NavGroup[] = [
+    {
+      items: [
+        { href: '/admin', label: 'داشبورد', icon: 'dashboard' }
+      ]
+    },
+    {
+      title: 'فروش و سفارشات',
+      items: [
+        { href: '/admin/products', label: 'محصولات', icon: 'game' },
+        { href: '/admin/orders', label: 'سفارشات', icon: 'package' },
+        { href: '/admin/users', label: 'کاربران', icon: 'users' },
+        { href: '/admin/reviews', label: 'نظرات', icon: 'message' },
+        { href: '/admin/analytics', label: 'آنالیتیکس', icon: 'chart' }
+      ]
+    },
+    {
+      title: 'محتوا و طراحی',
+      items: [
+        { href: '/admin/home', label: 'صفحه اصلی', icon: 'home' },
+        { href: '/admin/banners', label: 'بنرها', icon: 'palette' }
+      ]
+    },
+    {
+      title: 'بازاریابی',
+      items: [
+        { href: '/admin/marketing', label: 'کمپین‌ها و تبلیغات', icon: 'megaphone' },
+        { href: '/admin/coupons', label: 'کوپن‌های تخفیف', icon: 'gift' }
+      ]
+    }
   ];
 
   return (
-    <div className="flex min-h-screen bg-slate-50" dir="rtl">
+    <AdminGuard>
+      <div className="flex min-h-screen bg-slate-50" dir="rtl">
+      {/* Mobile Sidebar Overlay */}
+      {sidebarOpen && (
+        <div
+          className="fixed inset-0 z-40 bg-black/50 md:hidden"
+          onClick={() => setSidebarOpen(false)}
+        />
+      )}
+
       {/* Sidebar */}
-      <aside className="hidden w-64 flex-col border-l border-slate-200 bg-white p-6 md:flex">
-        <div className="mb-8">
-          <h1 className="text-2xl font-black text-slate-900">GameClub</h1>
-          <p className="text-xs text-slate-500">پنل مدیریت</p>
-        </div>
-        <nav className="space-y-2">
-          {links.map((link) => (
+      <aside
+        className={`fixed inset-y-0 right-0 z-50 w-72 transform border-l border-slate-200 bg-gradient-to-b from-slate-50 to-white shadow-2xl transition-transform duration-300 md:relative md:translate-x-0 ${
+          sidebarOpen ? 'translate-x-0' : 'translate-x-full md:translate-x-0'
+        }`}
+      >
+        <div className="flex h-full flex-col">
+          {/* Logo & Header */}
+          <div className="border-b border-slate-200 bg-gradient-to-r from-emerald-500 to-emerald-600 p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <h1 className="text-2xl font-black text-white">GameClub</h1>
+                <p className="text-xs text-emerald-100 mt-0.5">پنل مدیریت</p>
+              </div>
+              <button
+                onClick={() => setSidebarOpen(false)}
+                className="md:hidden rounded-lg p-2 hover:bg-white/20 transition text-white"
+              >
+                <Icon name="x" size={20} className="text-white" />
+              </button>
+            </div>
+          </div>
+
+          {/* Navigation */}
+          <nav className="flex-1 overflow-y-auto p-4 space-y-6">
+            {navGroups.map((group, groupIndex) => (
+              <div key={groupIndex} className="space-y-2">
+                {group.title && (
+                  <h3 className="px-4 text-xs font-bold uppercase tracking-wider text-slate-400 mb-2">
+                    {group.title}
+                  </h3>
+                )}
+                <div className="space-y-1">
+                  {group.items.map((link) => {
+                    const isActive = pathname === link.href || (link.href !== '/admin' && pathname?.startsWith(link.href));
+                    return (
+                      <Link
+                        key={link.href}
+                        href={link.href}
+                        onClick={() => setSidebarOpen(false)}
+                        className={`group flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-semibold transition-all duration-200 ${
+                          isActive
+                            ? 'bg-gradient-to-r from-emerald-500 to-emerald-600 text-white shadow-lg shadow-emerald-500/30 scale-[1.02]'
+                            : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900 hover:translate-x-[-2px]'
+                        }`}
+                      >
+                        <Icon 
+                          name={link.icon as any} 
+                          size={20} 
+                          className={`transition-transform ${isActive ? 'scale-110 text-white' : 'text-slate-600 group-hover:scale-110'}`}
+                          strokeWidth={isActive ? 2.5 : 2}
+                        />
+                        <span className="flex-1">{link.label}</span>
+                        {link.badge && (
+                          <span className={`rounded-full px-2 py-0.5 text-xs font-bold ${
+                            isActive ? 'bg-white/20 text-white' : 'bg-emerald-100 text-emerald-600'
+                          }`}>
+                            {link.badge}
+                          </span>
+                        )}
+                      </Link>
+                    );
+                  })}
+                </div>
+              </div>
+            ))}
+          </nav>
+
+          {/* Footer */}
+          <div className="border-t border-slate-200 bg-slate-50/50 p-4 space-y-2">
             <Link
-              key={link.href}
-              href={link.href}
-              className={`block rounded-xl px-4 py-3 text-sm font-bold transition ${
-                pathname === link.href
-                  ? 'bg-emerald-50 text-emerald-600'
-                  : 'text-slate-600 hover:bg-slate-50'
-              }`}
+              href="/"
+              className="flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-semibold text-slate-600 hover:bg-white hover:text-emerald-600 transition-all duration-200 hover:shadow-sm"
             >
-              {link.label}
+              <Icon name="home" size={18} className="text-slate-600" />
+              <span>بازگشت به سایت</span>
             </Link>
-          ))}
-        </nav>
-        <div className="mt-auto border-t border-slate-100 pt-4">
-            <Link href="/" className="block rounded-xl px-4 py-3 text-sm font-bold text-slate-500 hover:bg-slate-50">
-                بازگشت به سایت
-            </Link>
+            <div className="px-4 py-2 text-xs text-slate-400 flex items-center justify-between">
+              <span>نسخه 1.0.0</span>
+              <span className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse"></span>
+            </div>
+          </div>
         </div>
       </aside>
 
       {/* Main Content */}
-      <main className="flex-1 p-6 md:p-10 overflow-y-auto h-screen">
-        {children}
+      <main className="flex-1 flex flex-col min-w-0">
+        {/* Top Bar */}
+        <header className="sticky top-0 z-30 border-b border-slate-200 bg-white/90 backdrop-blur-md shadow-sm px-4 py-4 md:px-8">
+          <div className="flex items-center justify-between">
+            <button
+              onClick={() => setSidebarOpen(true)}
+              className="md:hidden rounded-xl p-2 hover:bg-slate-100 transition text-slate-600"
+            >
+              <Icon name="menu" size={24} />
+            </button>
+            <div className="flex items-center gap-6">
+              <div className="hidden md:flex items-center gap-2 text-sm text-slate-600 bg-emerald-50 px-4 py-2 rounded-full">
+                <span className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse"></span>
+                <span className="font-semibold">آنلاین</span>
+              </div>
+              <div className="text-sm text-slate-600 font-medium bg-slate-50 px-4 py-2 rounded-full">
+                {new Date().toLocaleDateString('fa-IR', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
+              </div>
+            </div>
+          </div>
+        </header>
+
+        {/* Content */}
+        <div className="flex-1 overflow-y-auto p-4 md:p-8">
+          {children}
+        </div>
       </main>
     </div>
+    </AdminGuard>
   );
 }

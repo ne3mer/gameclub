@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { useEffect, useState } from 'react';
 import { API_BASE_URL, adminHeaders, ADMIN_API_KEY } from '@/lib/api';
 import { ProductRow } from '@/types/admin';
+import { Icon } from '@/components/icons/Icon';
 
 const parseList = (value: string) =>
   value.split(',').map((entry) => entry.trim()).filter(Boolean);
@@ -116,17 +117,27 @@ export default function ProductsPage() {
 
   return (
     <div className="space-y-6">
-      <header className="flex items-center justify-between">
+      <header className="flex items-center justify-between flex-wrap gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-slate-900">لیست محصولات</h1>
-          <p className="text-sm text-slate-500">مدیریت و ویرایش محصولات موجود</p>
+          <h1 className="text-2xl font-black text-slate-900">لیست محصولات</h1>
+          <p className="text-sm text-slate-500 mt-1">مدیریت و ویرایش محصولات موجود</p>
         </div>
-        <button
-          onClick={fetchProducts}
-          className="rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm font-bold text-slate-700 hover:bg-slate-50"
-        >
-          بروزرسانی لیست
-        </button>
+        <div className="flex items-center gap-3">
+          <Link
+            href="/admin/products/new"
+            className="flex items-center gap-2 rounded-xl bg-gradient-to-r from-emerald-500 to-emerald-600 px-5 py-2.5 text-sm font-bold text-white shadow-lg shadow-emerald-500/30 hover:from-emerald-600 hover:to-emerald-700 transition-all duration-200 hover:scale-105"
+          >
+            <Icon name="plus" size={16} />
+            افزودن محصول جدید
+          </Link>
+          <button
+            onClick={fetchProducts}
+            className="flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-bold text-slate-700 hover:bg-slate-50 transition"
+          >
+            <Icon name="refresh" size={16} />
+            بروزرسانی
+          </button>
+        </div>
       </header>
 
       {statusMessage && (
@@ -148,90 +159,136 @@ export default function ProductsPage() {
       ) : (
         <div className="grid gap-4">
           {products.map((product) => (
-            <div key={product.id} className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm transition hover:shadow-md">
-              <div className="grid gap-4 md:grid-cols-12">
-                {/* Basic Info */}
-                <div className="md:col-span-4 space-y-3">
-                  <label className="block">
-                    <span className="text-xs text-slate-500">نام محصول</span>
-                    <input
-                      value={product.title}
-                      onChange={(e) => updateProductDraft(product.id, 'title', e.target.value)}
-                      className="mt-1 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm"
-                    />
-                  </label>
-                  <label className="block">
-                    <span className="text-xs text-slate-500">اسلاگ</span>
-                    <input
-                      value={product.slug}
-                      onChange={(e) => updateProductDraft(product.id, 'slug', e.target.value)}
-                      className="mt-1 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm font-mono"
-                    />
-                  </label>
-                </div>
-
-                {/* Details */}
-                <div className="md:col-span-4 space-y-3">
-                  <div className="grid grid-cols-2 gap-3">
+            <div key={product.id} className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm transition hover:shadow-lg">
+              <div className="flex items-start gap-4">
+                {/* Cover Image */}
+                {product.coverUrl && (
+                  <div className="relative h-24 w-24 flex-shrink-0 rounded-xl overflow-hidden border border-slate-200">
+                    <img src={product.coverUrl} alt={product.title} className="w-full h-full object-cover" />
+                  </div>
+                )}
+                
+                <div className="flex-1 grid gap-4 md:grid-cols-12">
+                  {/* Basic Info */}
+                  <div className="md:col-span-5 space-y-3">
+                    <div className="flex items-start justify-between gap-2">
+                      <div className="flex-1">
+                        <label className="block">
+                          <span className="text-xs text-slate-500 mb-1 block">نام محصول</span>
+                          <input
+                            value={product.title}
+                            onChange={(e) => updateProductDraft(product.id, 'title', e.target.value)}
+                            className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm font-semibold focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 transition"
+                          />
+                        </label>
+                      </div>
+                      <div className="flex flex-wrap gap-1 flex-shrink-0">
+                        {product.featured && (
+                          <span className="inline-flex items-center gap-1 rounded-full bg-emerald-100 px-2 py-1 text-xs font-bold text-emerald-700">
+                            <Icon name="star" size={12} />
+                            ویژه
+                          </span>
+                        )}
+                        {product.onSale && (
+                          <span className="inline-flex items-center gap-1 rounded-full bg-rose-100 px-2 py-1 text-xs font-bold text-rose-700">
+                            تخفیف
+                          </span>
+                        )}
+                        {product.rating && (
+                          <span className="inline-flex items-center gap-1 rounded-full bg-yellow-100 px-2 py-1 text-xs font-bold text-yellow-700">
+                            <Icon name="star" size={12} />
+                            {product.rating.toFixed(1)}
+                          </span>
+                        )}
+                      </div>
+                    </div>
                     <label className="block">
-                      <span className="text-xs text-slate-500">قیمت پایه</span>
+                      <span className="text-xs text-slate-500 mb-1 block">اسلاگ</span>
                       <input
-                        type="number"
-                        value={product.basePrice}
-                        onChange={(e) => updateProductDraft(product.id, 'basePrice', e.target.value)}
-                        className="mt-1 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm"
+                        value={product.slug}
+                        onChange={(e) => updateProductDraft(product.id, 'slug', e.target.value)}
+                        className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm font-mono focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 transition"
                       />
                     </label>
+                    <div className="flex flex-wrap gap-2 text-xs">
+                      <span className="text-slate-500">پلتفرم:</span>
+                      <span className="font-semibold text-slate-700">{product.platform}</span>
+                      {product.genre.length > 0 && (
+                        <>
+                          <span className="text-slate-300">•</span>
+                          <span className="text-slate-500">ژانر:</span>
+                          <span className="font-semibold text-slate-700">{product.genre.slice(0, 2).join(', ')}</span>
+                        </>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Details */}
+                  <div className="md:col-span-4 space-y-3">
+                    <div className="grid grid-cols-2 gap-3">
+                      <label className="block">
+                        <span className="text-xs text-slate-500 mb-1 block">قیمت پایه</span>
+                        <input
+                          type="number"
+                          value={product.basePrice}
+                          onChange={(e) => updateProductDraft(product.id, 'basePrice', e.target.value)}
+                          className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 transition"
+                        />
+                      </label>
+                      <label className="block">
+                        <span className="text-xs text-slate-500 mb-1 block">پلتفرم</span>
+                        <input
+                          value={product.platform}
+                          onChange={(e) => updateProductDraft(product.id, 'platform', e.target.value)}
+                          className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 transition"
+                        />
+                      </label>
+                    </div>
                     <label className="block">
-                      <span className="text-xs text-slate-500">پلتفرم</span>
+                      <span className="text-xs text-slate-500 mb-1 block">مناطق</span>
                       <input
-                        value={product.platform}
-                        onChange={(e) => updateProductDraft(product.id, 'platform', e.target.value)}
-                        className="mt-1 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm"
+                        value={product.regionOptions.join(', ')}
+                        onChange={(e) => updateProductDraft(product.id, 'regionOptions', e.target.value)}
+                        className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 transition"
                       />
                     </label>
                   </div>
-                  <label className="block">
-                    <span className="text-xs text-slate-500">مناطق (با کاما)</span>
-                    <input
-                      value={product.regionOptions.join(', ')}
-                      onChange={(e) => updateProductDraft(product.id, 'regionOptions', e.target.value)}
-                      className="mt-1 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm"
-                    />
-                  </label>
-                </div>
 
-                {/* Actions & Extra */}
-                <div className="md:col-span-4 flex flex-col justify-between space-y-3">
-                  <label className="flex items-center gap-2 text-sm text-slate-600">
-                    <input
-                      type="checkbox"
-                      checked={product.safeAccountAvailable}
-                      onChange={(e) => updateProductDraft(product.id, 'safeAccountAvailable', e.target.checked)}
-                      className="h-4 w-4 rounded border-slate-300 accent-emerald-500"
-                    />
-                    Safe Account موجود است
-                  </label>
-                  
-                  <div className="flex gap-2 self-end">
-                    <Link
-                      href={`/admin/products/${product.id}/edit`}
-                      className="rounded-xl border border-indigo-200 bg-indigo-50 px-4 py-2 text-sm font-bold text-indigo-600 hover:bg-indigo-100"
-                    >
-                      ویرایش کامل
-                    </Link>
-                    <button
-                      onClick={() => saveExistingProduct(product.id)}
-                      className="rounded-xl bg-emerald-500 px-4 py-2 text-sm font-bold text-white hover:bg-emerald-600"
-                    >
-                      ذخیره تغییرات
-                    </button>
-                    <button
-                      onClick={() => deleteProduct(product.id)}
-                      className="rounded-xl border border-rose-200 bg-rose-50 px-4 py-2 text-sm font-bold text-rose-600 hover:bg-rose-100"
-                    >
-                      حذف
-                    </button>
+                  {/* Actions */}
+                  <div className="md:col-span-3 flex flex-col justify-between gap-3">
+                    <label className="flex items-center gap-2 text-sm text-slate-600 p-2 rounded-lg bg-slate-50">
+                      <input
+                        type="checkbox"
+                        checked={product.safeAccountAvailable}
+                        onChange={(e) => updateProductDraft(product.id, 'safeAccountAvailable', e.target.checked)}
+                        className="h-4 w-4 rounded border-slate-300 accent-emerald-500"
+                      />
+                      <span className="text-xs">Safe Account</span>
+                    </label>
+                    
+                    <div className="flex flex-wrap gap-2">
+                      <Link
+                        href={`/admin/products/${product.id}/edit`}
+                        className="flex-1 flex items-center justify-center gap-1 rounded-lg border border-indigo-200 bg-indigo-50 px-3 py-2 text-xs font-bold text-indigo-600 hover:bg-indigo-100 transition"
+                      >
+                        <Icon name="edit" size={14} />
+                        ویرایش
+                      </Link>
+                      <button
+                        onClick={() => saveExistingProduct(product.id)}
+                        className="flex-1 flex items-center justify-center gap-1 rounded-lg bg-emerald-500 px-3 py-2 text-xs font-bold text-white hover:bg-emerald-600 transition"
+                      >
+                        <Icon name="save" size={14} />
+                        ذخیره
+                      </button>
+                      <button
+                        onClick={() => deleteProduct(product.id)}
+                        className="rounded-lg border border-rose-200 bg-rose-50 p-2 text-rose-600 hover:bg-rose-100 transition"
+                        title="حذف"
+                      >
+                        <Icon name="trash" size={14} />
+                      </button>
+                    </div>
                   </div>
                 </div>
               </div>

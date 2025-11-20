@@ -29,7 +29,7 @@ const mapBackendGameToCard = (game: BackendGame): GameCardContent => ({
   safe: game.safeAccountAvailable,
   monthlyPrice: Math.floor(game.basePrice * 0.3),
   category: game.genre[0]?.toLowerCase() || 'action',
-  rating: 5.0, // New games get 5 stars :)
+  rating: 0, // Will be fetched dynamically via useGameRating hook
   cover: game.coverUrl || 'https://images.igdb.com/igdb/image/upload/t_cover_big/nocover.webp'
 });
 
@@ -73,9 +73,9 @@ export const NewArrivalsSection = () => {
       </div>
       
       {loading && (
-        <div className="flex gap-4 overflow-x-auto pb-2">
+        <div className="flex gap-4 overflow-x-auto pb-2 no-scrollbar">
           {[1, 2, 3, 4].map((i) => (
-            <div key={i} className="min-w-[280px] h-96 rounded-3xl bg-slate-200 animate-pulse" />
+            <div key={i} className="flex-shrink-0 w-[280px] sm:w-[320px] md:w-[360px] h-96 rounded-3xl bg-slate-200 animate-pulse" />
           ))}
         </div>
       )}
@@ -87,9 +87,11 @@ export const NewArrivalsSection = () => {
       )}
       
       {!loading && !error && games.length > 0 && (
-        <div className="no-scrollbar flex gap-4 overflow-x-auto pb-2">
+        <div className="flex gap-4 overflow-x-auto pb-2 no-scrollbar scroll-smooth">
           {games.map((game) => (
-            <GameCard key={game.id} game={game} />
+            <div key={game.id} className="flex-shrink-0 w-[280px] sm:w-[320px] md:w-[360px]">
+              <GameCard game={game} />
+            </div>
           ))}
         </div>
       )}

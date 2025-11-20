@@ -14,6 +14,7 @@ export interface GameFilters {
   safeOnly?: boolean;
   search?: string;
   sort?: string;
+  limit?: number;
 }
 
 export const listGames = async (filters: GameFilters) => {
@@ -42,7 +43,13 @@ export const listGames = async (filters: GameFilters) => {
     sortOptions.createdAt = 1;
   }
 
-  return GameModel.find(query).sort(sortOptions);
+  let queryBuilder = GameModel.find(query).sort(sortOptions);
+  
+  if (filters.limit && filters.limit > 0) {
+    queryBuilder = queryBuilder.limit(filters.limit);
+  }
+
+  return queryBuilder;
 };
 
 export const createGame = async (payload: CreateGameInput) => {
@@ -61,7 +68,24 @@ export const getGameById = async (idOrSlug: string) => {
 };
 
 export const updateGame = async (idOrSlug: string, payload: UpdateGameInput) => {
-  return GameModel.findOneAndUpdate(gameIdentifierFilter(idOrSlug), payload, { new: true });
+  const game = await GameModel.findOneAndUpdate(gameIdentifierFilter(idOrSlug), payload, { new: true });
+  
+  // Check price alerts if price was updated
+  if (game && (payload.basePrice !== undefined || payload.salePrice !== undefined)) {
+    try {
+      const { checkAndTriggerPriceAlerts } = await import('./priceAlert.service');
+      const currentPrice = payload.salePrice && payload.onSale 
+        ? payload.salePrice 
+        : payload.basePrice || game.basePrice;
+      
+      await checkAndTriggerPriceAlerts(game._id.toString(), currentPrice);
+    } catch (error) {
+      console.error('Failed to check price alerts:', error);
+      // Don't fail the update if price alert check fails
+    }
+  }
+  
+  return game;
 };
 
 export const deleteGame = async (idOrSlug: string) => {

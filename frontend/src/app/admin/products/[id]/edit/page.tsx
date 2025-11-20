@@ -6,6 +6,7 @@ import { useParams, useRouter } from 'next/navigation';
 import { API_BASE_URL, ADMIN_API_KEY, adminHeaders } from '@/lib/api';
 import { ImageUpload } from '@/components/upload/ImageUpload';
 import type { NewProductState, ProductRow } from '@/types/admin';
+import { Icon } from '@/components/icons/Icon';
 
 const RichTextEditor = dynamic(
   () => import('@/components/editor/RichTextEditor').then((mod) => ({ default: mod.RichTextEditor })),
@@ -30,6 +31,8 @@ type StatusState = {
   message: string;
 } | null;
 
+type TabType = 'basic' | 'media' | 'metadata' | 'seo' | 'variants';
+
 export default function EditProductPage() {
   const router = useRouter();
   const params = useParams<{ id: string }>();
@@ -39,6 +42,7 @@ export default function EditProductPage() {
   const [saving, setSaving] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [status, setStatus] = useState<StatusState>(null);
+  const [activeTab, setActiveTab] = useState<TabType>('basic');
 
   const loadProduct = useCallback(async (silent = false) => {
     if (!productId) return;
@@ -57,6 +61,10 @@ export default function EditProductPage() {
         throw new Error('محصول مورد نظر یافت نشد.');
       }
 
+      const releaseDateStr = product.releaseDate 
+        ? new Date(product.releaseDate).toISOString().split('T')[0]
+        : '';
+
       setFormState({
         title: product.title ?? '',
         slug: product.slug ?? '',
@@ -70,6 +78,22 @@ export default function EditProductPage() {
         coverUrl: product.coverUrl ?? '',
         gallery: product.gallery ?? [],
         tags: product.tags?.join(', ') ?? '',
+        trailerUrl: product.trailerUrl ?? '',
+        gameplayVideoUrl: product.gameplayVideoUrl ?? '',
+        screenshots: product.screenshots?.join(', ') ?? '',
+        rating: product.rating != null ? String(product.rating) : '',
+        releaseDate: releaseDateStr,
+        developer: product.developer ?? '',
+        publisher: product.publisher ?? '',
+        ageRating: product.ageRating ?? '',
+        features: product.features?.join(', ') ?? '',
+        systemRequirementsMinimum: product.systemRequirements?.minimum ?? '',
+        systemRequirementsRecommended: product.systemRequirements?.recommended ?? '',
+        metaTitle: product.metaTitle ?? '',
+        metaDescription: product.metaDescription ?? '',
+        featured: Boolean(product.featured),
+        onSale: Boolean(product.onSale),
+        salePrice: product.salePrice != null ? String(product.salePrice) : '',
         options: product.options ?? [],
         variants: product.variants ?? []
       });
@@ -95,6 +119,10 @@ export default function EditProductPage() {
 
   const handleGalleryChange = (value: string) => {
     setFormState((prev) => (prev ? { ...prev, gallery: parseList(value) } : prev));
+  };
+
+  const handleScreenshotsChange = (value: string) => {
+    setFormState((prev) => (prev ? { ...prev, screenshots: value } : prev));
   };
 
   const handleOptionNameChange = (id: string, name: string) => {
@@ -216,7 +244,7 @@ export default function EditProductPage() {
     setSaving(true);
     setStatus(null);
 
-    const payload = {
+    const payload: any = {
       title: formState.title,
       slug: formState.slug,
       description: formState.description,
@@ -232,6 +260,47 @@ export default function EditProductPage() {
       options: formState.options,
       variants: formState.variants
     };
+
+    // Media fields
+    if (formState.trailerUrl) payload.trailerUrl = formState.trailerUrl;
+    if (formState.gameplayVideoUrl) payload.gameplayVideoUrl = formState.gameplayVideoUrl;
+    if (formState.screenshots) {
+      const screenshotsList = parseList(formState.screenshots);
+      if (screenshotsList.length > 0) payload.screenshots = screenshotsList;
+    }
+
+    // Enhanced metadata
+    if (formState.rating) {
+      const ratingNum = Number(formState.rating);
+      if (!Number.isNaN(ratingNum) && ratingNum >= 0 && ratingNum <= 5) {
+        payload.rating = ratingNum;
+      }
+    }
+    if (formState.releaseDate) payload.releaseDate = formState.releaseDate;
+    if (formState.developer) payload.developer = formState.developer;
+    if (formState.publisher) payload.publisher = formState.publisher;
+    if (formState.ageRating) payload.ageRating = formState.ageRating;
+    if (formState.features) {
+      const featuresList = parseList(formState.features);
+      if (featuresList.length > 0) payload.features = featuresList;
+    }
+    if (formState.systemRequirementsMinimum || formState.systemRequirementsRecommended) {
+      payload.systemRequirements = {};
+      if (formState.systemRequirementsMinimum) payload.systemRequirements.minimum = formState.systemRequirementsMinimum;
+      if (formState.systemRequirementsRecommended) payload.systemRequirements.recommended = formState.systemRequirementsRecommended;
+    }
+
+    // SEO & Marketing
+    if (formState.metaTitle) payload.metaTitle = formState.metaTitle;
+    if (formState.metaDescription) payload.metaDescription = formState.metaDescription;
+    payload.featured = formState.featured;
+    payload.onSale = formState.onSale;
+    if (formState.onSale && formState.salePrice) {
+      const salePriceNum = Number(formState.salePrice);
+      if (!Number.isNaN(salePriceNum) && salePriceNum > 0) {
+        payload.salePrice = salePriceNum;
+      }
+    }
 
     if (!productId) {
       setStatus({
@@ -315,8 +384,11 @@ export default function EditProductPage() {
 
   if (loading) {
     return (
-      <div className="rounded-2xl border border-slate-200 bg-white p-8 text-center text-slate-600">
-        در حال بارگذاری اطلاعات محصول...
+      <div className="flex items-center justify-center min-h-[400px]">
+        <div className="text-center">
+          <div className="h-12 w-12 animate-spin rounded-full border-4 border-slate-200 border-t-emerald-500 mx-auto mb-4"></div>
+          <p className="text-slate-600">در حال بارگذاری اطلاعات محصول...</p>
+        </div>
       </div>
     );
   }
@@ -343,270 +415,591 @@ export default function EditProductPage() {
     );
   }
 
+  const tabs: { id: TabType; label: string; icon: string }[] = [
+    { id: 'basic', label: 'اطلاعات پایه', icon: 'file' },
+    { id: 'media', label: 'رسانه و تصاویر', icon: 'image' },
+    { id: 'metadata', label: 'اطلاعات تکمیلی', icon: 'file' },
+    { id: 'seo', label: 'SEO و بازاریابی', icon: 'trending' },
+    { id: 'variants', label: 'انواع و قیمت', icon: 'package' }
+  ];
+
   return (
-    <div className="mx-auto max-w-5xl space-y-6">
+    <div className="mx-auto max-w-7xl space-y-6">
+      {/* Header */}
       <header className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-slate-900">ویرایش محصول</h1>
-          <p className="text-sm text-slate-500">ویرایش کامل مشخصات {formState.title}</p>
+          <h1 className="text-3xl font-black text-slate-900">ویرایش محصول</h1>
+          <p className="text-sm text-slate-500 mt-1">{formState.title || 'محصول جدید'}</p>
         </div>
         <div className="flex gap-2">
           <button
             type="button"
             onClick={() => router.push('/admin/products')}
-            className="rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm font-bold text-slate-700 hover:bg-slate-50"
+            className="flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-bold text-slate-700 hover:bg-slate-50 transition"
           >
-            بازگشت به لیست
+            <Icon name="arrow-right" size={16} />
+            بازگشت
           </button>
           <button
             type="button"
             onClick={handleDeleteProduct}
             disabled={deleting}
-            className="rounded-xl border border-rose-200 bg-rose-50 px-4 py-2 text-sm font-bold text-rose-600 hover:bg-rose-100 disabled:opacity-70"
+            className="flex items-center gap-2 rounded-xl border border-rose-200 bg-rose-50 px-4 py-2.5 text-sm font-bold text-rose-600 hover:bg-rose-100 disabled:opacity-70 transition"
           >
-            {deleting ? 'در حال حذف...' : 'حذف محصول'}
+            <Icon name="trash" size={16} />
+            {deleting ? 'در حال حذف...' : 'حذف'}
           </button>
         </div>
       </header>
 
+      {/* Status Message */}
       {status && (
         <div
           className={`rounded-2xl px-4 py-3 text-sm ${
-            status.type === 'success' ? 'bg-emerald-50 text-emerald-700' : 'bg-rose-50 text-rose-700'
+            status.type === 'success' ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' : 'bg-rose-50 text-rose-700 border border-rose-200'
           }`}
         >
           {status.message}
         </div>
       )}
 
-      <form onSubmit={handleSaveProduct} className="grid gap-6 rounded-3xl border border-slate-200 bg-white p-6 shadow-sm md:grid-cols-2">
-        <label>
-          <span className="text-sm font-bold text-slate-700">نام بازی</span>
-          <input
-            value={formState.title}
-            onChange={(event) => handleFieldChange('title', event.target.value)}
-            className="mt-2 w-full rounded-xl border border-slate-200 px-4 py-3 text-sm"
-            required
-          />
-        </label>
-        <label>
-          <span className="text-sm font-bold text-slate-700">اسلاگ (URL)</span>
-          <input
-            value={formState.slug}
-            onChange={(event) => handleFieldChange('slug', event.target.value)}
-            className="mt-2 w-full rounded-xl border border-slate-200 px-4 py-3 text-sm font-mono"
-            required
-          />
-        </label>
-        <label className="md:col-span-2">
-          <span className="text-sm font-bold text-slate-700">توضیحات کوتاه</span>
-          <textarea
-            value={formState.description}
-            onChange={(event) => handleFieldChange('description', event.target.value)}
-            className="mt-2 w-full rounded-xl border border-slate-200 px-4 py-3 text-sm"
-            rows={3}
-            required
-          />
-        </label>
-
-        <div className="grid grid-cols-2 gap-4 md:col-span-2">
-          <label>
-            <span className="text-sm font-bold text-slate-700">ژانرها (با کاما)</span>
-            <input
-              value={formState.genre}
-              onChange={(event) => handleFieldChange('genre', event.target.value)}
-              className="mt-2 w-full rounded-xl border border-slate-200 px-4 py-3 text-sm"
-            />
-          </label>
-          <label>
-            <span className="text-sm font-bold text-slate-700">پلتفرم</span>
-            <input
-              value={formState.platform}
-              onChange={(event) => handleFieldChange('platform', event.target.value)}
-              className="mt-2 w-full rounded-xl border border-slate-200 px-4 py-3 text-sm"
-            />
-          </label>
-        </div>
-
-        <div className="grid grid-cols-2 gap-4 md:col-span-2">
-          <label>
-            <span className="text-sm font-bold text-slate-700">قیمت پایه (تومان)</span>
-            <input
-              type="number"
-              value={formState.basePrice}
-              onChange={(event) => handleFieldChange('basePrice', event.target.value)}
-              className="mt-2 w-full rounded-xl border border-slate-200 px-4 py-3 text-sm"
-              required
-            />
-          </label>
-          <label>
-            <span className="text-sm font-bold text-slate-700">مناطق (R1, R2 ...)</span>
-            <input
-              value={formState.regionOptions}
-              onChange={(event) => handleFieldChange('regionOptions', event.target.value)}
-              className="mt-2 w-full rounded-xl border border-slate-200 px-4 py-3 text-sm"
-            />
-          </label>
-        </div>
-
-        <div className="md:col-span-2">
-          <ImageUpload
-            currentImage={formState.coverUrl}
-            onImageUploaded={(url) => handleFieldChange('coverUrl', url)}
-            label="تصویر کاور محصول"
-          />
-        </div>
-
-        <div className="md:col-span-2">
-          <label className="block text-sm font-bold text-slate-700 mb-2">توضیحات کامل محصول (Rich Text)</label>
-          <RichTextEditor content={formState.detailedDescription} onChange={(value) => handleFieldChange('detailedDescription', value)} />
-          <p className="mt-2 text-xs text-slate-500">تمام جزئیات، تصاویر و لینک‌ها را می‌توانید ویرایش کنید.</p>
-        </div>
-
-        <label className="md:col-span-2">
-          <span className="text-sm font-bold text-slate-700">تگ‌ها (با کاما)</span>
-          <input
-            value={formState.tags}
-            onChange={(event) => handleFieldChange('tags', event.target.value)}
-            className="mt-2 w-full rounded-xl border border-slate-200 px-4 py-3 text-sm"
-          />
-        </label>
-
-        <label className="md:col-span-2">
-          <span className="text-sm font-bold text-slate-700">گالری تصاویر (با کاما)</span>
-          <input
-            value={formState.gallery.join(', ')}
-            onChange={(event) => handleGalleryChange(event.target.value)}
-            className="mt-2 w-full rounded-xl border border-slate-200 px-4 py-3 text-sm"
-            placeholder="https://example.com/image-1.webp, https://example.com/image-2.webp"
-          />
-        </label>
-
-        <div className="md:col-span-2 space-y-4 rounded-2xl border border-slate-100 bg-slate-50 p-6">
-          <div className="flex items-center justify-between">
-            <h3 className="font-bold text-slate-900">ویژگی‌های محصول (Options)</h3>
+      {/* Tabs */}
+      <div className="border-b border-slate-200">
+        <div className="flex gap-2 overflow-x-auto">
+          {tabs.map((tab) => (
             <button
+              key={tab.id}
               type="button"
-              onClick={handleAddOption}
-              className="rounded-xl bg-white border border-slate-200 px-3 py-1.5 text-xs font-bold text-slate-700 hover:bg-slate-50"
+              onClick={() => setActiveTab(tab.id)}
+              className={`flex items-center gap-2 whitespace-nowrap border-b-2 px-4 py-3 text-sm font-bold transition ${
+                activeTab === tab.id
+                  ? 'border-emerald-500 text-emerald-600'
+                  : 'border-transparent text-slate-500 hover:text-slate-700 hover:border-slate-300'
+              }`}
             >
-              + افزودن ویژگی
+              <Icon name={tab.icon as any} size={16} />
+              {tab.label}
             </button>
-          </div>
+          ))}
+        </div>
+      </div>
 
-          {formState.options.map((opt) => (
-            <div key={opt.id} className="grid gap-4 md:grid-cols-2 rounded-xl bg-white border border-slate-200 p-4">
-              <label>
-                <span className="text-xs text-slate-500">نام ویژگی</span>
+      {/* Form */}
+      <form onSubmit={handleSaveProduct} className="space-y-6">
+        {/* Basic Info Tab */}
+        {activeTab === 'basic' && (
+          <div className="grid gap-6 rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
+            <h2 className="text-xl font-bold text-slate-900 border-b border-slate-100 pb-3">اطلاعات پایه محصول</h2>
+            
+            <div className="grid gap-6 md:grid-cols-2">
+              <label className="md:col-span-2">
+                <span className="text-sm font-bold text-slate-700 mb-2 block">نام بازی *</span>
                 <input
-                  value={opt.name}
-                  onChange={(e) => handleOptionNameChange(opt.id, e.target.value)}
-                  className="mt-1 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm"
-                  placeholder="Platform"
+                  value={formState.title}
+                  onChange={(event) => handleFieldChange('title', event.target.value)}
+                  className="w-full rounded-xl border border-slate-200 px-4 py-3 text-sm focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 transition"
+                  required
+                  placeholder="مثال: God of War Ragnarök"
                 />
               </label>
-              <div className="flex items-end gap-2">
-                <label className="flex-1">
-                  <span className="text-xs text-slate-500">مقادیر (با کاما)</span>
-                  <input
-                    value={opt.values.join(', ')}
-                    onChange={(e) => handleOptionValuesChange(opt.id, e.target.value)}
-                    className="mt-1 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm"
-                    placeholder="PS4, PS5"
-                  />
-                </label>
-                <button
-                  type="button"
-                  onClick={() => handleRemoveOption(opt.id)}
-                  className="mb-1 rounded-lg bg-rose-50 p-2 text-rose-500 hover:bg-rose-100"
+
+              <label>
+                <span className="text-sm font-bold text-slate-700 mb-2 block">اسلاگ (URL) *</span>
+                <input
+                  value={formState.slug}
+                  onChange={(event) => handleFieldChange('slug', event.target.value)}
+                  className="w-full rounded-xl border border-slate-200 px-4 py-3 text-sm font-mono focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 transition"
+                  required
+                  placeholder="god-of-war-ragnarok"
+                />
+                <p className="text-xs text-slate-500 mt-1">فقط حروف انگلیسی، اعداد و خط تیره</p>
+              </label>
+
+              <label>
+                <span className="text-sm font-bold text-slate-700 mb-2 block">پلتفرم *</span>
+                <select
+                  value={formState.platform}
+                  onChange={(event) => handleFieldChange('platform', event.target.value)}
+                  className="w-full rounded-xl border border-slate-200 px-4 py-3 text-sm focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 transition"
+                  required
                 >
-                  <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
-                    />
-                  </svg>
-                </button>
+                  <option value="PS5">PlayStation 5</option>
+                  <option value="PS4">PlayStation 4</option>
+                  <option value="Xbox Series X|S">Xbox Series X|S</option>
+                  <option value="Xbox One">Xbox One</option>
+                  <option value="PC">PC</option>
+                  <option value="Nintendo Switch">Nintendo Switch</option>
+                </select>
+              </label>
+
+              <label>
+                <span className="text-sm font-bold text-slate-700 mb-2 block">قیمت پایه (تومان) *</span>
+                <input
+                  type="number"
+                  value={formState.basePrice}
+                  onChange={(event) => handleFieldChange('basePrice', event.target.value)}
+                  className="w-full rounded-xl border border-slate-200 px-4 py-3 text-sm focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 transition"
+                  required
+                  min="0"
+                  placeholder="1500000"
+                />
+              </label>
+
+              <label>
+                <span className="text-sm font-bold text-slate-700 mb-2 block">ژانرها (با کاما)</span>
+                <input
+                  value={formState.genre}
+                  onChange={(event) => handleFieldChange('genre', event.target.value)}
+                  className="w-full rounded-xl border border-slate-200 px-4 py-3 text-sm focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 transition"
+                  placeholder="اکشن, ماجراجویی, نقش آفرینی"
+                />
+              </label>
+
+              <label>
+                <span className="text-sm font-bold text-slate-700 mb-2 block">مناطق (با کاما)</span>
+                <input
+                  value={formState.regionOptions}
+                  onChange={(event) => handleFieldChange('regionOptions', event.target.value)}
+                  className="w-full rounded-xl border border-slate-200 px-4 py-3 text-sm focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 transition"
+                  placeholder="R1, R2, R3"
+                />
+              </label>
+
+              <label className="md:col-span-2">
+                <span className="text-sm font-bold text-slate-700 mb-2 block">توضیحات کوتاه *</span>
+                <textarea
+                  value={formState.description}
+                  onChange={(event) => handleFieldChange('description', event.target.value)}
+                  className="w-full rounded-xl border border-slate-200 px-4 py-3 text-sm focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 transition"
+                  rows={4}
+                  required
+                  placeholder="توضیحات کوتاه و جذاب درباره بازی..."
+                />
+              </label>
+
+              <label className="md:col-span-2">
+                <span className="text-sm font-bold text-slate-700 mb-2 block">تگ‌ها (با کاما)</span>
+                <input
+                  value={formState.tags}
+                  onChange={(event) => handleFieldChange('tags', event.target.value)}
+                  className="w-full rounded-xl border border-slate-200 px-4 py-3 text-sm focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 transition"
+                  placeholder="محبوب, جدید, پیشنهاد ویژه"
+                />
+              </label>
+
+              <div className="md:col-span-2">
+                <ImageUpload
+                  currentImage={formState.coverUrl}
+                  onImageUploaded={(url) => handleFieldChange('coverUrl', url)}
+                  label="تصویر کاور محصول"
+                />
               </div>
+
+              <div className="md:col-span-2">
+                <label className="block text-sm font-bold text-slate-700 mb-2">توضیحات کامل محصول (Rich Text)</label>
+                <RichTextEditor 
+                  content={formState.detailedDescription} 
+                  onChange={(value) => handleFieldChange('detailedDescription', value)} 
+                />
+                <p className="mt-2 text-xs text-slate-500">می‌توانید از تصاویر، لینک‌ها و فرمت‌های مختلف استفاده کنید</p>
+              </div>
+
+              <label className="flex items-center gap-3 p-4 rounded-xl border border-slate-200 bg-slate-50">
+                <input
+                  type="checkbox"
+                  checked={formState.safeAccountAvailable}
+                  onChange={(event) => handleFieldChange('safeAccountAvailable', event.target.checked)}
+                  className="h-5 w-5 rounded border-slate-300 accent-emerald-500"
+                />
+                <div>
+                  <span className="text-sm font-bold text-slate-700">Safe Account موجود است</span>
+                  <p className="text-xs text-slate-500 mt-1">اگر این گزینه فعال باشد، کاربران می‌توانند Safe Account خریداری کنند</p>
+                </div>
+              </label>
             </div>
-          ))}
+          </div>
+        )}
 
-          {formState.options.length > 0 && (
-            <div className="mt-6 border-t border-slate-200 pt-6">
-              <div className="flex items-center justify-between mb-4">
-                <h3 className="font-bold text-slate-900">انواع محصول (Variants)</h3>
+        {/* Media Tab */}
+        {activeTab === 'media' && (
+          <div className="grid gap-6 rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
+            <h2 className="text-xl font-bold text-slate-900 border-b border-slate-100 pb-3">رسانه و تصاویر</h2>
+            
+            <div className="grid gap-6">
+              <label>
+                <span className="text-sm font-bold text-slate-700 mb-2 block">لینک تریلر (YouTube/Vimeo)</span>
+                <input
+                  type="url"
+                  value={formState.trailerUrl}
+                  onChange={(event) => handleFieldChange('trailerUrl', event.target.value)}
+                  className="w-full rounded-xl border border-slate-200 px-4 py-3 text-sm focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 transition"
+                  placeholder="https://www.youtube.com/watch?v=..."
+                />
+                <p className="text-xs text-slate-500 mt-1">لینک کامل ویدیو از YouTube یا Vimeo</p>
+              </label>
+
+              <label>
+                <span className="text-sm font-bold text-slate-700 mb-2 block">لینک ویدیو گیم‌پلی (YouTube/Vimeo)</span>
+                <input
+                  type="url"
+                  value={formState.gameplayVideoUrl}
+                  onChange={(event) => handleFieldChange('gameplayVideoUrl', event.target.value)}
+                  className="w-full rounded-xl border border-slate-200 px-4 py-3 text-sm focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 transition"
+                  placeholder="https://www.youtube.com/watch?v=..."
+                />
+                <p className="text-xs text-slate-500 mt-1">لینک کامل ویدیو گیم‌پلی از YouTube یا Vimeo</p>
+              </label>
+
+              <label>
+                <span className="text-sm font-bold text-slate-700 mb-2 block">گالری تصاویر (با کاما)</span>
+                <textarea
+                  value={formState.gallery.join(', ')}
+                  onChange={(event) => handleGalleryChange(event.target.value)}
+                  className="w-full rounded-xl border border-slate-200 px-4 py-3 text-sm focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 transition"
+                  rows={3}
+                  placeholder="https://example.com/image1.jpg, https://example.com/image2.jpg"
+                />
+                <p className="text-xs text-slate-500 mt-1">لینک تصاویر را با کاما از هم جدا کنید</p>
+              </label>
+
+              <label>
+                <span className="text-sm font-bold text-slate-700 mb-2 block">اسکرین‌شات‌ها (با کاما)</span>
+                <textarea
+                  value={formState.screenshots}
+                  onChange={(event) => handleScreenshotsChange(event.target.value)}
+                  className="w-full rounded-xl border border-slate-200 px-4 py-3 text-sm focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 transition"
+                  rows={3}
+                  placeholder="https://example.com/screenshot1.jpg, https://example.com/screenshot2.jpg"
+                />
+                <p className="text-xs text-slate-500 mt-1">لینک اسکرین‌شات‌های بازی را با کاما از هم جدا کنید</p>
+              </label>
+            </div>
+          </div>
+        )}
+
+        {/* Metadata Tab */}
+        {activeTab === 'metadata' && (
+          <div className="grid gap-6 rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
+            <h2 className="text-xl font-bold text-slate-900 border-b border-slate-100 pb-3">اطلاعات تکمیلی</h2>
+            
+            <div className="grid gap-6 md:grid-cols-2">
+              <label>
+                <span className="text-sm font-bold text-slate-700 mb-2 block">امتیاز (0-5)</span>
+                <input
+                  type="number"
+                  min="0"
+                  max="5"
+                  step="0.1"
+                  value={formState.rating}
+                  onChange={(event) => handleFieldChange('rating', event.target.value)}
+                  className="w-full rounded-xl border border-slate-200 px-4 py-3 text-sm focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 transition"
+                  placeholder="4.5"
+                />
+              </label>
+
+              <label>
+                <span className="text-sm font-bold text-slate-700 mb-2 block">تاریخ انتشار</span>
+                <input
+                  type="date"
+                  value={formState.releaseDate}
+                  onChange={(event) => handleFieldChange('releaseDate', event.target.value)}
+                  className="w-full rounded-xl border border-slate-200 px-4 py-3 text-sm focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 transition"
+                />
+              </label>
+
+              <label>
+                <span className="text-sm font-bold text-slate-700 mb-2 block">توسعه‌دهنده</span>
+                <input
+                  value={formState.developer}
+                  onChange={(event) => handleFieldChange('developer', event.target.value)}
+                  className="w-full rounded-xl border border-slate-200 px-4 py-3 text-sm focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 transition"
+                  placeholder="مثال: Santa Monica Studio"
+                />
+              </label>
+
+              <label>
+                <span className="text-sm font-bold text-slate-700 mb-2 block">ناشر</span>
+                <input
+                  value={formState.publisher}
+                  onChange={(event) => handleFieldChange('publisher', event.target.value)}
+                  className="w-full rounded-xl border border-slate-200 px-4 py-3 text-sm focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 transition"
+                  placeholder="مثال: Sony Interactive Entertainment"
+                />
+              </label>
+
+              <label>
+                <span className="text-sm font-bold text-slate-700 mb-2 block">رده سنی</span>
+                <select
+                  value={formState.ageRating}
+                  onChange={(event) => handleFieldChange('ageRating', event.target.value)}
+                  className="w-full rounded-xl border border-slate-200 px-4 py-3 text-sm focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 transition"
+                >
+                  <option value="">انتخاب کنید</option>
+                  <option value="E">E - Everyone</option>
+                  <option value="E10+">E10+ - Everyone 10+</option>
+                  <option value="T">T - Teen</option>
+                  <option value="M">M - Mature</option>
+                  <option value="AO">AO - Adults Only</option>
+                </select>
+              </label>
+
+              <label className="md:col-span-2">
+                <span className="text-sm font-bold text-slate-700 mb-2 block">ویژگی‌ها (با کاما)</span>
+                <input
+                  value={formState.features}
+                  onChange={(event) => handleFieldChange('features', event.target.value)}
+                  className="w-full rounded-xl border border-slate-200 px-4 py-3 text-sm focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 transition"
+                  placeholder="چند نفره آنلاین, رایگان, Ray Tracing"
+                />
+              </label>
+
+              <label className="md:col-span-2">
+                <span className="text-sm font-bold text-slate-700 mb-2 block">حداقل نیازمندی‌های سیستم</span>
+                <textarea
+                  value={formState.systemRequirementsMinimum}
+                  onChange={(event) => handleFieldChange('systemRequirementsMinimum', event.target.value)}
+                  className="w-full rounded-xl border border-slate-200 px-4 py-3 text-sm focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 transition"
+                  rows={3}
+                  placeholder="CPU: Intel Core i5-8400..."
+                />
+              </label>
+
+              <label className="md:col-span-2">
+                <span className="text-sm font-bold text-slate-700 mb-2 block">پیشنهادی نیازمندی‌های سیستم</span>
+                <textarea
+                  value={formState.systemRequirementsRecommended}
+                  onChange={(event) => handleFieldChange('systemRequirementsRecommended', event.target.value)}
+                  className="w-full rounded-xl border border-slate-200 px-4 py-3 text-sm focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 transition"
+                  rows={3}
+                  placeholder="CPU: Intel Core i7-9700K..."
+                />
+              </label>
+            </div>
+          </div>
+        )}
+
+        {/* SEO & Marketing Tab */}
+        {activeTab === 'seo' && (
+          <div className="grid gap-6 rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
+            <h2 className="text-xl font-bold text-slate-900 border-b border-slate-100 pb-3">SEO و بازاریابی</h2>
+            
+            <div className="grid gap-6">
+              <label>
+                <span className="text-sm font-bold text-slate-700 mb-2 block">عنوان SEO (Meta Title)</span>
+                <input
+                  value={formState.metaTitle}
+                  onChange={(event) => handleFieldChange('metaTitle', event.target.value)}
+                  className="w-full rounded-xl border border-slate-200 px-4 py-3 text-sm focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 transition"
+                  placeholder="عنوانی که در نتایج جستجو نمایش داده می‌شود"
+                  maxLength={60}
+                />
+                <p className="text-xs text-slate-500 mt-1">حداکثر 60 کاراکتر (بهینه: 50-60)</p>
+              </label>
+
+              <label>
+                <span className="text-sm font-bold text-slate-700 mb-2 block">توضیحات SEO (Meta Description)</span>
+                <textarea
+                  value={formState.metaDescription}
+                  onChange={(event) => handleFieldChange('metaDescription', event.target.value)}
+                  className="w-full rounded-xl border border-slate-200 px-4 py-3 text-sm focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 transition"
+                  rows={3}
+                  placeholder="توضیحات کوتاه برای نتایج جستجو"
+                  maxLength={160}
+                />
+                <p className="text-xs text-slate-500 mt-1">حداکثر 160 کاراکتر (بهینه: 150-160)</p>
+              </label>
+
+              <div className="grid gap-4 md:grid-cols-2 p-4 rounded-xl border border-slate-200 bg-slate-50">
+                <label className="flex items-center gap-3">
+                  <input
+                    type="checkbox"
+                    checked={formState.featured}
+                    onChange={(event) => handleFieldChange('featured', event.target.checked)}
+                    className="h-5 w-5 rounded border-slate-300 accent-emerald-500"
+                  />
+                  <div>
+                    <span className="text-sm font-bold text-slate-700">محصول ویژه</span>
+                    <p className="text-xs text-slate-500 mt-1">نمایش در بخش محصولات ویژه</p>
+                  </div>
+                </label>
+
+                <label className="flex items-center gap-3">
+                  <input
+                    type="checkbox"
+                    checked={formState.onSale}
+                    onChange={(event) => handleFieldChange('onSale', event.target.checked)}
+                    className="h-5 w-5 rounded border-slate-300 accent-emerald-500"
+                  />
+                  <div>
+                    <span className="text-sm font-bold text-slate-700">در حال فروش</span>
+                    <p className="text-xs text-slate-500 mt-1">نمایش برچسب تخفیف</p>
+                  </div>
+                </label>
+              </div>
+
+              {formState.onSale && (
+                <label>
+                  <span className="text-sm font-bold text-slate-700 mb-2 block">قیمت تخفیف (تومان)</span>
+                  <input
+                    type="number"
+                    value={formState.salePrice}
+                    onChange={(event) => handleFieldChange('salePrice', event.target.value)}
+                    className="w-full rounded-xl border border-slate-200 px-4 py-3 text-sm focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 transition"
+                    min="0"
+                    placeholder="1200000"
+                  />
+                  <p className="text-xs text-slate-500 mt-1">قیمت با تخفیف (باید کمتر از قیمت پایه باشد)</p>
+                </label>
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* Variants Tab */}
+        {activeTab === 'variants' && (
+          <div className="grid gap-6 rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
+            <h2 className="text-xl font-bold text-slate-900 border-b border-slate-100 pb-3">انواع و قیمت‌گذاری</h2>
+            
+            <div className="space-y-6 rounded-2xl border border-slate-100 bg-slate-50 p-6">
+              <div className="flex items-center justify-between">
+                <h3 className="font-bold text-slate-900">ویژگی‌های محصول (Options)</h3>
                 <button
                   type="button"
-                  onClick={generateVariants}
-                  className="rounded-xl bg-indigo-50 px-3 py-1.5 text-xs font-bold text-indigo-600 hover:bg-indigo-100"
+                  onClick={handleAddOption}
+                  className="flex items-center gap-2 rounded-xl bg-emerald-500 px-4 py-2 text-sm font-bold text-white hover:bg-emerald-600 transition"
                 >
-                  تولید خودکار انواع
+                  <Icon name="plus" size={16} />
+                  افزودن ویژگی
                 </button>
               </div>
 
-              {formState.variants.length > 0 && (
-                <div className="overflow-x-auto rounded-xl border border-slate-200 bg-white">
-                  <table className="w-full text-left text-sm">
-                    <thead className="bg-slate-50 text-xs text-slate-500">
-                      <tr>
-                        <th className="p-3 text-right">ترکیب</th>
-                        <th className="p-3 text-right">قیمت</th>
-                        <th className="p-3 text-right">موجودی</th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-slate-100">
-                      {formState.variants.map((variant) => (
-                        <tr key={variant.id}>
-                          <td className="p-3 font-mono text-right" dir="ltr">
-                            {Object.entries(variant.selectedOptions)
-                              .map(([k, v]) => `${k}: ${v}`)
-                              .join(' | ')}
-                          </td>
-                          <td className="p-3">
-                            <input
-                              type="number"
-                              value={variant.price}
-                              onChange={(e) => handleVariantChange(variant.id, 'price', Number(e.target.value))}
-                              className="w-32 rounded-lg border border-slate-200 px-2 py-1 text-sm"
-                            />
-                          </td>
-                          <td className="p-3">
-                            <input
-                              type="number"
-                              value={variant.stock}
-                              onChange={(e) => handleVariantChange(variant.id, 'stock', Number(e.target.value))}
-                              className="w-20 rounded-lg border border-slate-200 px-2 py-1 text-sm"
-                            />
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
+              {formState.options.length === 0 && (
+                <div className="text-center py-8 text-slate-500">
+                  <p className="text-sm">هنوز ویژگی‌ای اضافه نشده است</p>
+                  <p className="text-xs mt-1">برای ایجاد انواع مختلف محصول، ابتدا ویژگی‌ها را اضافه کنید</p>
+                </div>
+              )}
+
+              {formState.options.map((opt) => (
+                <div key={opt.id} className="grid gap-4 md:grid-cols-2 rounded-xl bg-white border border-slate-200 p-4">
+                  <label>
+                    <span className="text-xs text-slate-500 mb-1 block">نام ویژگی</span>
+                    <input
+                      value={opt.name}
+                      onChange={(e) => handleOptionNameChange(opt.id, e.target.value)}
+                      className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 transition"
+                      placeholder="مثال: منطقه"
+                    />
+                  </label>
+                  <div className="flex items-end gap-2">
+                    <label className="flex-1">
+                      <span className="text-xs text-slate-500 mb-1 block">مقادیر (با کاما)</span>
+                      <input
+                        value={opt.values.join(', ')}
+                        onChange={(e) => handleOptionValuesChange(opt.id, e.target.value)}
+                        className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 transition"
+                        placeholder="R1, R2, R3"
+                      />
+                    </label>
+                    <button
+                      type="button"
+                      onClick={() => handleRemoveOption(opt.id)}
+                      className="mb-1 rounded-lg bg-rose-50 p-2 text-rose-500 hover:bg-rose-100 transition"
+                      title="حذف"
+                    >
+                      <Icon name="trash" size={16} />
+                    </button>
+                  </div>
+                </div>
+              ))}
+
+              {formState.options.length > 0 && (
+                <div className="mt-6 border-t border-slate-200 pt-6">
+                  <div className="flex items-center justify-between mb-4">
+                    <h3 className="font-bold text-slate-900">انواع محصول (Variants)</h3>
+                    <button
+                      type="button"
+                      onClick={generateVariants}
+                      className="flex items-center gap-2 rounded-xl bg-indigo-50 px-4 py-2 text-sm font-bold text-indigo-600 hover:bg-indigo-100 transition"
+                    >
+                      <Icon name="refresh" size={16} />
+                      تولید خودکار انواع
+                    </button>
+                  </div>
+
+                  {formState.variants.length === 0 && (
+                    <div className="text-center py-8 text-slate-500">
+                      <p className="text-sm">هنوز نوعی ایجاد نشده است</p>
+                      <p className="text-xs mt-1">روی دکمه "تولید خودکار انواع" کلیک کنید</p>
+                    </div>
+                  )}
+
+                  {formState.variants.length > 0 && (
+                    <div className="overflow-x-auto rounded-xl border border-slate-200 bg-white">
+                      <table className="w-full text-left text-sm">
+                        <thead className="bg-slate-50 text-xs text-slate-500">
+                          <tr>
+                            <th className="p-3 text-right">ترکیب</th>
+                            <th className="p-3 text-right">قیمت (تومان)</th>
+                            <th className="p-3 text-right">موجودی</th>
+                          </tr>
+                        </thead>
+                        <tbody className="divide-y divide-slate-100">
+                          {formState.variants.map((variant) => (
+                            <tr key={variant.id} className="hover:bg-slate-50 transition">
+                              <td className="p-3 font-mono text-right text-xs" dir="ltr">
+                                {Object.entries(variant.selectedOptions)
+                                  .map(([k, v]) => `${k}: ${v}`)
+                                  .join(' | ')}
+                              </td>
+                              <td className="p-3">
+                                <input
+                                  type="number"
+                                  value={variant.price}
+                                  onChange={(e) => handleVariantChange(variant.id, 'price', Number(e.target.value))}
+                                  className="w-32 rounded-lg border border-slate-200 px-2 py-1 text-sm focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 transition"
+                                  min="0"
+                                />
+                              </td>
+                              <td className="p-3">
+                                <input
+                                  type="number"
+                                  value={variant.stock}
+                                  onChange={(e) => handleVariantChange(variant.id, 'stock', Number(e.target.value))}
+                                  className="w-20 rounded-lg border border-slate-200 px-2 py-1 text-sm focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 transition"
+                                  min="0"
+                                />
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  )}
                 </div>
               )}
             </div>
-          )}
-        </div>
+          </div>
+        )}
 
-        <label className="flex items-center gap-2 text-sm text-slate-600">
-          <input
-            type="checkbox"
-            checked={formState.safeAccountAvailable}
-            onChange={(event) => handleFieldChange('safeAccountAvailable', event.target.checked)}
-            className="h-4 w-4 rounded border-slate-300 accent-emerald-500"
-          />
-          Safe Account موجود است
-        </label>
-
-        <div className="md:col-span-2 pt-4 space-y-3">
+        {/* Save Button */}
+        <div className="sticky bottom-0 bg-white border-t border-slate-200 p-4 -mx-6 -mb-6 rounded-b-3xl shadow-lg">
           <button
             type="submit"
             disabled={saving}
-            className="w-full rounded-2xl bg-emerald-500 py-4 text-base font-bold text-white shadow-lg shadow-emerald-500/20 transition hover:bg-emerald-600 hover:shadow-emerald-500/30 disabled:opacity-70"
+            className="w-full flex items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-emerald-500 to-emerald-600 py-4 text-base font-bold text-white shadow-lg shadow-emerald-500/30 transition hover:from-emerald-600 hover:to-emerald-700 hover:shadow-emerald-500/40 disabled:opacity-70 disabled:cursor-not-allowed"
           >
-            {saving ? 'در حال ذخیره...' : 'ذخیره تغییرات محصول'}
+            {saving ? (
+              <>
+                <div className="h-5 w-5 animate-spin rounded-full border-2 border-white border-t-transparent"></div>
+                در حال ذخیره...
+              </>
+            ) : (
+              <>
+                <Icon name="save" size={20} />
+                ذخیره تغییرات محصول
+              </>
+            )}
           </button>
         </div>
       </form>

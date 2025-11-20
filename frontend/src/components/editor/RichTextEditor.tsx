@@ -24,6 +24,7 @@ export function RichTextEditor({ content, onChange }: RichTextEditorProps) {
       }),
       Link.configure({
         openOnClick: false,
+        autolink: true,
       }),
     ],
     content,

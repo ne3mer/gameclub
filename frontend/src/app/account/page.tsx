@@ -2,9 +2,13 @@
 
 import Link from 'next/link';
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { priceAlerts } from '@/data/catalog';
 import type { AdminOrder } from '@/types/admin';
 import { API_BASE_URL } from '@/lib/api';
+import { PriceAlertModal } from '@/components/alerts/PriceAlertModal';
+import { formatToman } from '@/lib/format';
+import { NotificationCenter } from '@/components/dashboard/NotificationCenter';
+import { Icon } from '@/components/icons/Icon';
+import { getAuthToken } from '@/lib/auth';
 
 type ProfileState = {
   name?: string;
@@ -102,6 +106,9 @@ export default function AccountPage() {
     telegram: ''
   });
   const [ackLoadingId, setAckLoadingId] = useState<string | null>(null);
+  const [profileSaving, setProfileSaving] = useState(false);
+  const [profileSaveSuccess, setProfileSaveSuccess] = useState('');
+  const [profileSaveError, setProfileSaveError] = useState('');
 
   const readAuthFromStorage = useCallback(() => {
     if (typeof window === 'undefined') {
@@ -242,7 +249,80 @@ export default function AccountPage() {
   }, [orders]);
 
   const handleProfileChange = (field: keyof typeof profileForm, value: string) => {
+    // Validate telegram field
+    if (field === 'telegram' && value && value.startsWith('@')) {
+      // Don't prevent, but will show warning in UI
+    }
     setProfileForm((prev) => ({ ...prev, [field]: value }));
+    setProfileSaveError('');
+    setProfileSaveSuccess('');
+  };
+
+  const handleProfileSave = async () => {
+    const authToken = getAuthToken();
+    if (!authToken) {
+      setProfileSaveError('لطفاً ابتدا وارد حساب کاربری خود شوید');
+      return;
+    }
+
+    setProfileSaving(true);
+    setProfileSaveError('');
+    setProfileSaveSuccess('');
+
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/profile`, {
+        method: 'PATCH',
+        headers: {
+          Authorization: `Bearer ${authToken}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          name: profileForm.name || undefined,
+          phone: profileForm.phone || undefined,
+          telegram: profileForm.telegram || undefined
+        })
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.message || 'خطا در به‌روزرسانی اطلاعات');
+      }
+
+      setProfileSaveSuccess('اطلاعات شما با موفقیت به‌روزرسانی شد');
+      
+      // Update local storage
+      const storedUser = localStorage.getItem('gc_user');
+      if (storedUser) {
+        try {
+          const user = JSON.parse(storedUser);
+          const updatedUser = {
+            ...user,
+            name: data.data.name || user.name,
+            phone: data.data.phone || user.phone,
+            telegram: data.data.telegram || user.telegram
+          };
+          localStorage.setItem('gc_user', JSON.stringify(updatedUser));
+          window.dispatchEvent(new Event('gc-auth-change'));
+        } catch (err) {
+          console.error('Failed to update local storage:', err);
+        }
+      }
+
+      // Update profile state
+      syncAuthState();
+
+      setTimeout(() => {
+        setProfileSaveSuccess('');
+      }, 3000);
+    } catch (error) {
+      setProfileSaveError(error instanceof Error ? error.message : 'خطا در به‌روزرسانی اطلاعات');
+      setTimeout(() => {
+        setProfileSaveError('');
+      }, 5000);
+    } finally {
+      setProfileSaving(false);
+    }
   };
 
   const heroInitials = useMemo(() => {
@@ -342,10 +422,15 @@ export default function AccountPage() {
       </section>
 
       <section className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-        <StatCard label="تعداد سفارش‌ها" value={summary.totalOrders} />
-        <StatCard label="پرداخت‌های موفق" value={summary.totalPaid} />
-        <StatCard label="جمع خرید" value={`${summary.totalSpent.toLocaleString('fa-IR')} تومان`} />
-        <StatCard label="برنامه وفاداری" value={summary.totalSpent > 20_000_000 ? 'Titanium Club' : 'Silver Club'} />
+        <StatCard label="تعداد سفارش‌ها" value={summary.totalOrders} icon="package" />
+        <StatCard label="پرداخت‌های موفق" value={summary.totalPaid} icon="check" />
+        <StatCard label="جمع خرید" value={`${summary.totalSpent.toLocaleString('fa-IR')} تومان`} icon="dollar" />
+        <StatCard label="برنامه وفاداری" value={summary.totalSpent > 20_000_000 ? 'Titanium Club' : summary.totalSpent > 10_000_000 ? 'Gold Club' : 'Silver Club'} icon="award" />
+      </section>
+
+      {/* Notifications Section */}
+      <section>
+        <NotificationCenter />
       </section>
 
       <section className="grid gap-6 lg:grid-cols-3">
@@ -458,17 +543,32 @@ export default function AccountPage() {
       </section>
 
       <section className="grid gap-6 lg:grid-cols-2">
-        <ProfileFormCard profileForm={profileForm} onChange={handleProfileChange} />
+        <ProfileFormCard 
+          profileForm={profileForm} 
+          onChange={handleProfileChange}
+          onSave={handleProfileSave}
+          saving={profileSaving}
+          success={profileSaveSuccess}
+          error={profileSaveError}
+        />
         <AlertsCard />
       </section>
     </div>
   );
 }
 
-const StatCard = ({ label, value }: { label: string; value: string | number }) => (
-  <article className="rounded-3xl border border-slate-100 bg-white p-6 shadow-sm">
-    <p className="text-xs text-slate-500">{label}</p>
-    <p className="mt-2 text-2xl font-black text-slate-900">{value}</p>
+const StatCard = ({ label, value, icon }: { label: string; value: string | number; icon?: string }) => (
+  <article className="group relative overflow-hidden rounded-3xl border border-slate-100 bg-white p-6 shadow-sm transition-all hover:shadow-md hover:border-emerald-200">
+    <div className="absolute -right-4 -top-4 h-20 w-20 rounded-full bg-emerald-100/50 blur-2xl transition-all group-hover:bg-emerald-200/50"></div>
+    <div className="relative">
+      {icon && (
+        <div className="mb-2 text-slate-600">
+          <Icon name={icon as any} size={24} strokeWidth={2} />
+        </div>
+      )}
+      <p className="text-xs text-slate-500">{label}</p>
+      <p className="mt-2 text-2xl font-black text-slate-900">{value}</p>
+    </div>
   </article>
 );
 
@@ -517,46 +617,99 @@ const LoyaltyColumn = ({ summary }: { summary: { totalSpent: number; totalOrders
 
 const ProfileFormCard = ({
   profileForm,
-  onChange
+  onChange,
+  onSave,
+  saving,
+  success,
+  error
 }: {
   profileForm: { name: string; email: string; phone: string; telegram: string };
   onChange: (field: keyof typeof profileForm, value: string) => void;
+  onSave: () => void;
+  saving: boolean;
+  success: string;
+  error: string;
 }) => (
   <div className="rounded-3xl border border-slate-100 bg-white p-6 shadow-sm">
     <h3 className="text-lg font-bold text-slate-900">اطلاعات تماس</h3>
     <p className="text-xs text-slate-500">ویرایش اطلاعات برای دریافت رسید و پشتیبانی سریع‌تر</p>
+    
+    {success && (
+      <div className="mt-4 rounded-2xl border border-emerald-200 bg-emerald-50 p-4 flex items-center gap-3">
+        <Icon name="check" size={20} className="text-emerald-600 flex-shrink-0" />
+        <p className="text-sm text-emerald-700 font-semibold">{success}</p>
+      </div>
+    )}
+
+    {error && (
+      <div className="mt-4 rounded-2xl border border-rose-200 bg-rose-50 p-4 flex items-center gap-3">
+        <Icon name="alert" size={20} className="text-rose-600 flex-shrink-0" />
+        <p className="text-sm text-rose-700 font-semibold">{error}</p>
+      </div>
+    )}
+
     <div className="mt-4 grid gap-4 text-sm text-slate-600 sm:grid-cols-2">
       <label>
         نام کامل
         <input
           value={profileForm.name}
           onChange={(event) => onChange('name', event.target.value)}
-          className="mt-2 w-full rounded-2xl border border-slate-200 px-4 py-3"
+          disabled={saving}
+          className="mt-2 w-full rounded-2xl border border-slate-200 px-4 py-3 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 transition disabled:opacity-50 disabled:cursor-not-allowed"
         />
       </label>
       <label>
         ایمیل
         <input
           value={profileForm.email}
-          onChange={(event) => onChange('email', event.target.value)}
-          className="mt-2 w-full rounded-2xl border border-slate-200 px-4 py-3"
+          disabled
+          className="mt-2 w-full rounded-2xl border border-slate-200 px-4 py-3 bg-slate-50 text-slate-500 cursor-not-allowed"
+          title="ایمیل قابل تغییر نیست"
         />
+        <p className="text-xs text-slate-400 mt-1">ایمیل قابل تغییر نیست</p>
       </label>
       <label>
         شماره موبایل
         <input
+          type="tel"
           value={profileForm.phone}
           onChange={(event) => onChange('phone', event.target.value)}
-          className="mt-2 w-full rounded-2xl border border-slate-200 px-4 py-3"
+          disabled={saving}
+          placeholder="09123456789"
+          className="mt-2 w-full rounded-2xl border border-slate-200 px-4 py-3 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 transition disabled:opacity-50 disabled:cursor-not-allowed"
         />
       </label>
       <label>
         آیدی تلگرام
         <input
+          type="text"
           value={profileForm.telegram}
           onChange={(event) => onChange('telegram', event.target.value)}
-          className="mt-2 w-full rounded-2xl border border-slate-200 px-4 py-3"
+          disabled={saving}
+          placeholder="24273100 (Chat ID عددی)"
+          className="mt-2 w-full rounded-2xl border border-slate-200 px-4 py-3 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 transition disabled:opacity-50 disabled:cursor-not-allowed"
         />
+        <div className="mt-1 space-y-1">
+          {profileForm.telegram && profileForm.telegram.startsWith('@') && (
+            <div className="rounded-xl border border-amber-200 bg-amber-50 p-2">
+              <p className="text-xs font-semibold text-amber-800">
+                ⚠️ هشدار: استفاده از username کار نمی‌کند!
+              </p>
+              <p className="text-xs text-amber-700 mt-1">
+                لطفاً Chat ID عددی خود را وارد کنید (مثلاً: 24273100)
+              </p>
+            </div>
+          )}
+          <p className="text-xs text-slate-400">
+            برای دریافت اعلان‌های تلگرام - <strong>فقط Chat ID عددی</strong>
+          </p>
+          <p className="text-xs text-slate-500">
+            برای دریافت Chat ID: به <a href="https://t.me/userinfobot" target="_blank" rel="noopener noreferrer" className="text-emerald-600 hover:underline font-semibold">@userinfobot</a> یا <a href="https://t.me/getidsbot" target="_blank" rel="noopener noreferrer" className="text-emerald-600 hover:underline font-semibold">@getidsbot</a> پیام بدهید
+          </p>
+          <p className="text-xs text-slate-400">
+            همچنین باید ابتدا با ربات ما گفتگو را شروع کنید
+          </p>
+        </div>
       </label>
     </div>
     <div className="mt-4 flex flex-wrap gap-2 text-xs text-slate-500">
@@ -567,46 +720,198 @@ const ProfileFormCard = ({
         کارت هدیه ۵۰ هزار تومانی بعد از تکمیل پروفایل
       </span>
     </div>
-    <button className="mt-4 w-full rounded-2xl bg-emerald-500 py-3 text-sm font-bold text-white">
-      ذخیره تغییرات
+    <button
+      onClick={onSave}
+      disabled={saving}
+      className="mt-4 w-full rounded-2xl bg-emerald-500 py-3 text-sm font-bold text-white hover:bg-emerald-600 transition disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+    >
+      {saving ? (
+        <>
+          <span className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent"></span>
+          در حال ذخیره...
+        </>
+      ) : (
+        <>
+          <Icon name="save" size={16} />
+          ذخیره تغییرات
+        </>
+      )}
     </button>
   </div>
 );
 
-const AlertsCard = () => (
-  <div className="rounded-3xl border border-slate-100 bg-white p-6 shadow-sm">
-    <div className="flex items-center justify-between">
-      <div>
-        <h3 className="text-lg font-bold text-slate-900">اعلان‌های قیمت</h3>
-        <p className="text-xs text-slate-500">خبر دار شوید تا اولین نفر خرید کنید</p>
-      </div>
-      <button className="rounded-2xl border border-slate-200 px-4 py-2 text-xs font-bold text-slate-600">
-        + هشدار جدید
-      </button>
-    </div>
-    <div className="mt-4 space-y-3">
-      {priceAlerts.slice(0, 3).map((alert) => (
-        <div
-          key={alert.id}
-          className="flex flex-wrap items-center justify-between gap-2 rounded-2xl border border-slate-100 bg-slate-50 p-4 text-sm text-slate-600"
-        >
+const AlertsCard = () => {
+  const [alerts, setAlerts] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [showModal, setShowModal] = useState(false);
+  const [selectedGame, setSelectedGame] = useState<{ id: string; title: string; price: number } | null>(null);
+  const [editingAlert, setEditingAlert] = useState<any>(null);
+
+  useEffect(() => {
+    fetchAlerts();
+  }, []);
+
+  const fetchAlerts = async () => {
+    const token = localStorage.getItem('gc_token');
+    if (!token) {
+      setLoading(false);
+      return;
+    }
+
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/price-alerts`, {
+        headers: {
+          Authorization: `Bearer ${token}`
+        }
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        setAlerts(Array.isArray(data?.data) ? data.data : []);
+      }
+    } catch (err) {
+      console.error('Error fetching alerts:', err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleDelete = async (alertId: string) => {
+    if (!confirm('آیا از حذف این هشدار اطمینان دارید؟')) return;
+
+    const token = localStorage.getItem('gc_token');
+    if (!token) return;
+
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/price-alerts/${alertId}`, {
+        method: 'DELETE',
+        headers: {
+          Authorization: `Bearer ${token}`
+        }
+      });
+
+      if (response.ok) {
+        fetchAlerts();
+      }
+    } catch (err) {
+      alert('خطا در حذف هشدار');
+    }
+  };
+
+  const handleEdit = (alert: any) => {
+    const game = alert.gameId || {};
+    setEditingAlert({
+      id: alert.id || alert._id,
+      targetPrice: alert.targetPrice,
+      channel: alert.channel,
+      destination: alert.destination
+    });
+    setSelectedGame({
+      id: game.id || game._id,
+      title: game.title || 'بازی',
+      price: game.basePrice || 0
+    });
+    setShowModal(true);
+  };
+
+  return (
+    <>
+      <div className="rounded-3xl border border-slate-100 bg-white p-6 shadow-sm">
+        <div className="flex items-center justify-between">
           <div>
-            <p className="font-semibold text-slate-900">{alert.game}</p>
-            <p className="text-xs text-slate-500">{alert.channel}</p>
+            <h3 className="text-lg font-bold text-slate-900">اعلان‌های قیمت</h3>
+            <p className="text-xs text-slate-500">خبر دار شوید تا اولین نفر خرید کنید</p>
           </div>
-          <div className="flex items-center gap-2">
-            <span className="rounded-full bg-white px-3 py-1 text-xs font-semibold text-slate-700">
-              {alert.target.toLocaleString('fa-IR')}
-            </span>
-            <button className="rounded-full border border-slate-200 px-4 py-2 text-xs font-semibold text-slate-600">
-              لغو
-            </button>
-          </div>
+          <button
+            onClick={() => {
+              setEditingAlert(null);
+              setSelectedGame(null);
+              setShowModal(true);
+            }}
+            className="rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-2 text-xs font-bold text-emerald-600 hover:bg-emerald-100 transition"
+          >
+            + هشدار جدید
+          </button>
         </div>
-      ))}
-    </div>
-  </div>
-);
+        <div className="mt-4 space-y-3">
+          {loading ? (
+            <div className="text-center py-8">
+              <div className="inline-block h-6 w-6 animate-spin rounded-full border-3 border-slate-200 border-t-emerald-500"></div>
+              <p className="text-xs text-slate-500 mt-2">در حال بارگذاری...</p>
+            </div>
+          ) : alerts.length === 0 ? (
+            <div className="text-center py-8 text-sm text-slate-500">
+              <p>هنوز هشداری ثبت نشده است</p>
+              <p className="text-xs text-slate-400 mt-1">برای دریافت اعلان کاهش قیمت، هشدار جدید ایجاد کنید</p>
+            </div>
+          ) : (
+            alerts.map((alert) => {
+              const game = alert.gameId || {};
+              const gameTitle = game.title || 'بازی ناشناس';
+              const currentPrice = game.basePrice || 0;
+              
+              return (
+                <div
+                  key={alert.id || alert._id}
+                  className="flex flex-wrap items-center justify-between gap-2 rounded-2xl border border-slate-100 bg-slate-50 p-4 text-sm text-slate-600"
+                >
+                  <div className="flex-1 min-w-0">
+                    <p className="font-semibold text-slate-900 truncate">{gameTitle}</p>
+                    <div className="flex items-center gap-3 mt-1 text-xs text-slate-500">
+                      <span className="flex items-center gap-1.5">
+                        <Icon name={alert.channel === 'email' ? 'mail' : 'message'} size={14} />
+                        {alert.channel === 'email' ? 'ایمیل' : 'تلگرام'}
+                      </span>
+                      <span>{alert.destination}</span>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span className="rounded-full bg-white px-3 py-1 text-xs font-semibold text-slate-700 whitespace-nowrap">
+                      {formatToman(alert.targetPrice)}
+                    </span>
+                    <button
+                      onClick={() => handleEdit(alert)}
+                      className="rounded-full border border-slate-200 px-3 py-1 text-xs font-semibold text-slate-600 hover:bg-white transition"
+                    >
+                      ویرایش
+                    </button>
+                    <button
+                      onClick={() => handleDelete(alert.id || alert._id)}
+                      className="rounded-full border border-rose-200 px-3 py-1 text-xs font-semibold text-rose-600 hover:bg-rose-50 transition"
+                    >
+                      حذف
+                    </button>
+                  </div>
+                </div>
+              );
+            })
+          )}
+        </div>
+      </div>
+
+      {showModal && (
+        <PriceAlertModal
+          gameId={selectedGame?.id}
+          gameTitle={selectedGame?.title}
+          currentPrice={selectedGame?.price}
+          isOpen={showModal}
+          onClose={() => {
+            setShowModal(false);
+            setEditingAlert(null);
+            setSelectedGame(null);
+          }}
+          onSuccess={() => {
+            fetchAlerts();
+            setShowModal(false);
+            setEditingAlert(null);
+            setSelectedGame(null);
+          }}
+          existingAlert={editingAlert}
+        />
+      )}
+    </>
+  );
+};
 
 const AccountAuthGate = () => (
   <div className="bg-slate-50 px-4 py-10 md:px-8">

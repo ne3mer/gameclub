@@ -17,7 +17,8 @@ const gameQuery = z.object({
       return undefined;
     }),
   search: z.string().optional(),
-  sort: z.string().optional()
+  sort: z.string().optional(),
+  limit: z.string().optional().transform((val) => val ? parseInt(val, 10) : undefined)
 });
 
 export const createGameSchema = z.object({
@@ -34,6 +35,28 @@ export const createGameSchema = z.object({
     coverUrl: z.string().optional(),
     gallery: z.array(z.string()).optional(),
     tags: z.array(z.string()).default([]),
+    // New media fields
+    trailerUrl: z.string().url().optional().or(z.literal('')),
+    gameplayVideoUrl: z.string().url().optional().or(z.literal('')),
+    screenshots: z.array(z.string().url()).optional(),
+    // Enhanced metadata
+    rating: z.number().min(0).max(5).optional(),
+    releaseDate: z.string().optional().transform((val) => val ? new Date(val) : undefined),
+    developer: z.string().optional(),
+    publisher: z.string().optional(),
+    ageRating: z.string().optional(),
+    features: z.array(z.string()).optional(),
+    systemRequirements: z.object({
+      minimum: z.string().optional(),
+      recommended: z.string().optional()
+    }).optional(),
+    // SEO & Marketing
+    metaTitle: z.string().optional(),
+    metaDescription: z.string().optional(),
+    featured: z.boolean().default(false),
+    onSale: z.boolean().default(false),
+    salePrice: z.number().positive().optional(),
+    // Options and variants
     options: z.array(z.object({
       id: z.string(),
       name: z.string(),
@@ -74,6 +97,28 @@ const updateGameBody = z
     coverUrl: z.string().optional(),
     gallery: z.array(z.string()).optional(),
     tags: z.array(z.string()).optional(),
+    // New media fields
+    trailerUrl: z.string().url().optional().or(z.literal('')),
+    gameplayVideoUrl: z.string().url().optional().or(z.literal('')),
+    screenshots: z.array(z.string().url()).optional(),
+    // Enhanced metadata
+    rating: z.number().min(0).max(5).optional(),
+    releaseDate: z.string().optional().transform((val) => val ? new Date(val) : undefined),
+    developer: z.string().optional(),
+    publisher: z.string().optional(),
+    ageRating: z.string().optional(),
+    features: z.array(z.string()).optional(),
+    systemRequirements: z.object({
+      minimum: z.string().optional(),
+      recommended: z.string().optional()
+    }).optional(),
+    // SEO & Marketing
+    metaTitle: z.string().optional(),
+    metaDescription: z.string().optional(),
+    featured: z.boolean().optional(),
+    onSale: z.boolean().optional(),
+    salePrice: z.number().positive().optional(),
+    // Options and variants
     options: z.array(z.object({
       id: z.string(),
       name: z.string(),

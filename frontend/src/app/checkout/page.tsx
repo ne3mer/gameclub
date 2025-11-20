@@ -7,6 +7,22 @@ import Image from 'next/image';
 import { useCart } from '@/contexts/CartContext';
 import { formatToman } from '@/lib/format';
 import { API_BASE_URL } from '@/lib/api';
+import { Icon } from '@/components/icons/Icon';
+import { getAuthToken } from '@/lib/auth';
+
+type CouponResult = {
+  valid: boolean;
+  coupon?: {
+    id: string;
+    code: string;
+    name: string;
+    type: 'percentage' | 'fixed';
+    value: number;
+    discount: number;
+    stackable: boolean;
+  };
+  error?: string;
+};
 
 export default function CheckoutPage() {
   const router = useRouter();
@@ -19,6 +35,69 @@ export default function CheckoutPage() {
     email: '',
     phone: ''
   });
+
+  const [couponCode, setCouponCode] = useState('');
+  const [couponLoading, setCouponLoading] = useState(false);
+  const [couponResult, setCouponResult] = useState<CouponResult | null>(null);
+  const [appliedCoupon, setAppliedCoupon] = useState<CouponResult['coupon'] | null>(null);
+
+  const validateCoupon = async (code: string) => {
+    if (!code.trim()) {
+      setCouponResult(null);
+      setAppliedCoupon(null);
+      return;
+    }
+
+    setCouponLoading(true);
+    setCouponResult(null);
+
+    try {
+      const token = getAuthToken();
+      const productIds = cart?.items.map(item => item.gameId.id) || [];
+
+      const response = await fetch(`${API_BASE_URL}/api/coupons/validate`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(token && { Authorization: `Bearer ${token}` })
+        },
+        body: JSON.stringify({
+          code: code.toUpperCase().trim(),
+          cartTotal: totalPrice,
+          productIds
+        })
+      });
+
+      const data = await response.json();
+      
+      if (data.success && data.data.valid) {
+        setCouponResult(data.data);
+        setAppliedCoupon(data.data.coupon);
+        setError('');
+      } else {
+        setCouponResult({
+          valid: false,
+          error: data.data?.error || 'کد تخفیف معتبر نیست'
+        });
+        setAppliedCoupon(null);
+      }
+    } catch (err) {
+      setCouponResult({
+        valid: false,
+        error: 'خطا در اعتبارسنجی کد تخفیف'
+      });
+      setAppliedCoupon(null);
+    } finally {
+      setCouponLoading(false);
+    }
+  };
+
+
+  const removeCoupon = () => {
+    setCouponCode('');
+    setCouponResult(null);
+    setAppliedCoupon(null);
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -33,7 +112,7 @@ export default function CheckoutPage() {
 
     try {
       // Get auth token if exists
-      const token = localStorage.getItem('gc_token');
+      const token = getAuthToken();
       const headers: HeadersInit = {
         'Content-Type': 'application/json'
       };
@@ -51,13 +130,19 @@ export default function CheckoutPage() {
         quantity: item.quantity
       }));
 
+      // Calculate final amount with discount
+      const discountAmount = appliedCoupon?.discount || 0;
+      const finalAmount = Math.max(0, totalPrice - discountAmount);
+
       const response = await fetch(`${API_BASE_URL}/api/orders`, {
         method: 'POST',
         headers,
         body: JSON.stringify({
           customerInfo,
           items,
-          totalAmount: totalPrice
+          totalAmount: finalAmount,
+          couponCode: appliedCoupon?.code,
+          discountAmount: discountAmount > 0 ? discountAmount : undefined
         })
       });
 
@@ -220,21 +305,95 @@ export default function CheckoutPage() {
           <div className="h-fit rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
             <h2 className="mb-4 text-lg font-bold text-slate-900">خلاصه سفارش</h2>
             
+            {/* Coupon Section */}
+            <div className="mb-4 rounded-xl border-2 border-dashed border-slate-200 bg-slate-50 p-4">
+              {!appliedCoupon ? (
+                <div className="space-y-2">
+                  <label className="block text-xs font-bold text-slate-700">کد تخفیف</label>
+                  <div className="flex gap-2">
+                    <input
+                      type="text"
+                      value={couponCode}
+                      onChange={(e) => setCouponCode(e.target.value.toUpperCase())}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter') {
+                          e.preventDefault();
+                          if (couponCode.trim() && !couponLoading) {
+                            validateCoupon(couponCode);
+                          }
+                        }
+                      }}
+                      placeholder="کد تخفیف را وارد کنید"
+                      className="flex-1 rounded-lg border border-slate-200 px-3 py-2 text-sm font-mono focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 transition"
+                      dir="ltr"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => validateCoupon(couponCode)}
+                      disabled={couponLoading || !couponCode.trim()}
+                      className="rounded-lg bg-emerald-500 px-4 py-2 text-sm font-bold text-white transition hover:bg-emerald-600 disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      {couponLoading ? '...' : 'اعمال'}
+                    </button>
+                  </div>
+                  {couponResult && !couponResult.valid && (
+                    <p className="text-xs text-rose-600 mt-1">{couponResult.error}</p>
+                  )}
+                </div>
+              ) : (
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <Icon name="check" size={18} className="text-emerald-500" />
+                    <div>
+                      <p className="text-xs font-bold text-emerald-700">{appliedCoupon.name}</p>
+                      <p className="text-xs text-slate-600 font-mono">{appliedCoupon.code}</p>
+                    </div>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={removeCoupon}
+                    className="rounded-lg p-1.5 text-slate-400 hover:bg-slate-200 hover:text-slate-600 transition"
+                    title="حذف کوپن"
+                  >
+                    <Icon name="x" size={16} />
+                  </button>
+                </div>
+              )}
+            </div>
+            
             <div className="space-y-3 border-b border-slate-100 pb-4">
               <div className="flex justify-between text-sm text-slate-600">
                 <span>قیمت کالاها ({cart.items.length})</span>
                 <span>{formatToman(totalPrice)} تومان</span>
               </div>
-              <div className="flex justify-between text-sm text-slate-600">
-                <span>تخفیف</span>
-                <span className="text-emerald-600">0 تومان</span>
-              </div>
+              {appliedCoupon && (
+                <div className="flex justify-between text-sm">
+                  <span className="text-emerald-600 font-semibold">تخفیف ({appliedCoupon.code})</span>
+                  <span className="text-emerald-600 font-bold">
+                    -{formatToman(appliedCoupon.discount)} تومان
+                  </span>
+                </div>
+              )}
+              {!appliedCoupon && (
+                <div className="flex justify-between text-sm text-slate-600">
+                  <span>تخفیف</span>
+                  <span>0 تومان</span>
+                </div>
+              )}
             </div>
 
             <div className="mt-4 flex justify-between text-lg font-black text-slate-900">
               <span>مبلغ قابل پرداخت</span>
-              <span>{formatToman(totalPrice)} تومان</span>
+              <span>
+                {formatToman(Math.max(0, totalPrice - (appliedCoupon?.discount || 0)))} تومان
+              </span>
             </div>
+            
+            {appliedCoupon && (
+              <div className="mt-2 rounded-lg bg-emerald-50 px-3 py-2 text-xs text-emerald-700">
+                <span className="font-semibold">🎉 شما {formatToman(appliedCoupon.discount)} تومان تخفیف دریافت کردید!</span>
+              </div>
+            )}
 
             <button
               type="submit"

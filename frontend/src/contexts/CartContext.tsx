@@ -71,24 +71,51 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
     const token = getAuthToken();
     if (!token) {
       setCart(null);
+      setError('');
       return;
     }
 
     try {
       setLoading(true);
+      setError('');
+      
       const response = await fetch(`${API_BASE_URL}/api/cart`, {
-        headers: getAuthHeaders()
+        headers: getAuthHeaders(),
+        credentials: 'include'
       });
 
       if (response.ok) {
         const data = await response.json();
         setCart(data.data);
+        setError('');
+      } else if (response.status === 401) {
+        // Unauthorized - token might be invalid
+        setCart(null);
+        setError('');
+        // Clear invalid token
+        if (typeof window !== 'undefined') {
+          localStorage.removeItem('gc_token');
+          localStorage.removeItem('gc_user');
+        }
       } else {
+        const errorData = await response.json().catch(() => ({}));
+        setError(errorData.message || 'خطا در دریافت سبد خرید');
         setCart(null);
       }
     } catch (err) {
+      // Network error or CORS issue
+      const errorMessage = err instanceof Error ? err.message : 'خطا در اتصال به سرور';
       console.error('Failed to fetch cart:', err);
-      setCart(null);
+      
+      // Only show error if it's not a network issue (user might be offline)
+      if (errorMessage.includes('Failed to fetch') || errorMessage.includes('NetworkError')) {
+        // Silently fail for network errors - user might be offline
+        setCart(null);
+        setError('');
+      } else {
+        setError(errorMessage);
+        setCart(null);
+      }
     } finally {
       setLoading(false);
     }
@@ -209,9 +236,33 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
     }
   };
 
-  // Load cart on mount and when user logs in
+  // Load cart on mount only if user is authenticated
   useEffect(() => {
-    refreshCart();
+    const token = getAuthToken();
+    if (token) {
+      refreshCart();
+    } else {
+      setCart(null);
+      setError('');
+    }
+  }, []);
+
+  // Listen for auth changes
+  useEffect(() => {
+    const handleAuthChange = () => {
+      const token = getAuthToken();
+      if (token) {
+        refreshCart();
+      } else {
+        setCart(null);
+        setError('');
+      }
+    };
+
+    if (typeof window !== 'undefined') {
+      window.addEventListener('gc-auth-change', handleAuthChange);
+      return () => window.removeEventListener('gc-auth-change', handleAuthChange);
+    }
   }, []);
 
   const itemCount = cart?.items.reduce((sum, item) => sum + item.quantity, 0) || 0;

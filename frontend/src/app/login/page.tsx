@@ -1,14 +1,16 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { API_BASE_URL, persistAuthSession } from '@/lib/api';
 
 export default function LoginPage() {
   const [status, setStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle');
   const [message, setMessage] = useState('');
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const redirectTo = searchParams?.get('redirect') || '/account';
 
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -41,7 +43,7 @@ export default function LoginPage() {
       persistAuthSession(payload?.data?.token, payload?.data?.user);
       setStatus('success');
       setMessage('ورود موفق! در حال انتقال...');
-      setTimeout(() => router.push('/account'), 800);
+      setTimeout(() => router.push(redirectTo), 800);
     } catch (err) {
       setStatus('error');
       setMessage(err instanceof Error ? err.message : 'ورود با مشکل مواجه شد.');

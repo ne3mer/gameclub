@@ -5,7 +5,7 @@ import * as orderService from '../services/order.service';
 import type { AdminOrderFilters } from '../services/order.service';
 
 export const createOrder = async (req: Request, res: Response) => {
-  const { customerInfo, items, totalAmount } = req.body;
+  const { customerInfo, items, totalAmount, couponCode, discountAmount } = req.body;
   let userId = (req as any).user?.id as string | undefined;
 
   if (!userId) {
@@ -26,8 +26,21 @@ export const createOrder = async (req: Request, res: Response) => {
       userId,
       customerInfo,
       items,
-      totalAmount
+      totalAmount,
+      couponCode,
+      discountAmount
     });
+
+    // Record coupon usage if coupon was applied
+    if (couponCode && discountAmount && discountAmount > 0) {
+      try {
+        const { recordCouponUsage } = await import('../services/coupon.service');
+        await recordCouponUsage(couponCode, discountAmount);
+      } catch (error) {
+        console.warn('Failed to record coupon usage:', error);
+        // Don't fail the order if coupon recording fails
+      }
+    }
 
     res.status(201).json({
       message: 'سفارش با موفقیت ثبت شد',

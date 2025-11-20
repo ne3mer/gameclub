@@ -12,6 +12,27 @@ export type ProductRow = {
   coverUrl?: string;
   gallery?: string[];
   tags: string[];
+  // Media fields
+  trailerUrl?: string;
+  gameplayVideoUrl?: string;
+  screenshots?: string[];
+  // Enhanced metadata
+  rating?: number;
+  releaseDate?: string;
+  developer?: string;
+  publisher?: string;
+  ageRating?: string;
+  features?: string[];
+  systemRequirements?: {
+    minimum?: string;
+    recommended?: string;
+  };
+  // SEO & Marketing
+  metaTitle?: string;
+  metaDescription?: string;
+  featured?: boolean;
+  onSale?: boolean;
+  salePrice?: number;
   options: {
     id: string;
     name: string;
@@ -37,6 +58,25 @@ export type NewProductState = {
   coverUrl: string;
   gallery: string[];
   tags: string;
+  // Media fields
+  trailerUrl: string;
+  gameplayVideoUrl: string;
+  screenshots: string;
+  // Enhanced metadata
+  rating: string;
+  releaseDate: string;
+  developer: string;
+  publisher: string;
+  ageRating: string;
+  features: string;
+  systemRequirementsMinimum: string;
+  systemRequirementsRecommended: string;
+  // SEO & Marketing
+  metaTitle: string;
+  metaDescription: string;
+  featured: boolean;
+  onSale: boolean;
+  salePrice: string;
   options: {
     id: string;
     name: string;
@@ -62,6 +102,25 @@ export const initialNewProduct: NewProductState = {
   coverUrl: '',
   gallery: [],
   tags: 'حماسی,Safe',
+  // Media fields
+  trailerUrl: '',
+  gameplayVideoUrl: '',
+  screenshots: '',
+  // Enhanced metadata
+  rating: '',
+  releaseDate: '',
+  developer: '',
+  publisher: '',
+  ageRating: '',
+  features: '',
+  systemRequirementsMinimum: '',
+  systemRequirementsRecommended: '',
+  // SEO & Marketing
+  metaTitle: '',
+  metaDescription: '',
+  featured: false,
+  onSale: false,
+  salePrice: '',
   options: [],
   variants: []
 };

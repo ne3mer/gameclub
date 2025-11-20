@@ -20,7 +20,9 @@ export const createOrderSchema = z.object({
   body: z.object({
     customerInfo: customerInfoSchema,
     items: z.array(orderItemSchema).min(1, 'حداقل یک محصول باید در سفارش باشد'),
-    totalAmount: z.number().positive()
+    totalAmount: z.number().positive(),
+    couponCode: z.string().optional(),
+    discountAmount: z.number().nonnegative().optional()
   }),
   query: empty,
   params: empty
@@ -99,7 +101,7 @@ export const adminSearchOrdersSchema = z.object({
     fromDate: z.string().optional(),
     toDate: z.string().optional(),
     page: z.coerce.number().int().min(1).optional(),
-    limit: z.coerce.number().int().min(1).max(100).optional()
+    limit: z.coerce.number().int().min(1).max(1000).optional()
   }),
   params: empty
 });

@@ -3,22 +3,18 @@
 import Link from 'next/link';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { CartIcon } from '@/components/cart/CartIcon';
-import { clearAuthSession } from '@/lib/api';
+import { clearAuthSession, API_BASE_URL } from '@/lib/api';
+import { isAdmin, type StoredUser, getAuthToken } from '@/lib/auth';
 
 const links = [
   { href: '/', label: 'خانه' },
-  { href: '/games', label: 'کاتالوگ بازی' },
-  { href: '/admin', label: 'مدیریت' }
+  { href: '/games', label: 'کاتالوگ بازی' }
 ];
-
-type StoredUser = {
-  name?: string;
-  fullName?: string;
-  email?: string;
-};
 
 export const MainNav = () => {
   const [user, setUser] = useState<StoredUser | null>(null);
+  const [showAdminLink, setShowAdminLink] = useState(false);
+  const [unreadNotifications, setUnreadNotifications] = useState(0);
 
   const syncUserFromStorage = useCallback(() => {
     if (typeof window === 'undefined') return;
@@ -27,14 +23,40 @@ export const MainNav = () => {
 
     if (token && stored) {
       try {
-        setUser(JSON.parse(stored));
+        const parsedUser = JSON.parse(stored);
+        setUser(parsedUser);
+        setShowAdminLink(isAdmin());
+        fetchUnreadCount();
       } catch {
         setUser(null);
+        setShowAdminLink(false);
       }
     } else {
       setUser(null);
+      setShowAdminLink(false);
+      setUnreadNotifications(0);
     }
   }, []);
+
+  const fetchUnreadCount = async () => {
+    const token = getAuthToken();
+    if (!token) return;
+
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/notifications/unread-count`, {
+        headers: {
+          Authorization: `Bearer ${token}`
+        }
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        setUnreadNotifications(data?.data?.count || 0);
+      }
+    } catch (err) {
+      // Silent fail
+    }
+  };
 
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect
@@ -75,9 +97,29 @@ export const MainNav = () => {
               {link.label}
             </Link>
           ))}
+          {showAdminLink && (
+            <Link href="/admin" className="transition hover:text-emerald-600">
+              مدیریت
+            </Link>
+          )}
         </div>
         <div className="flex items-center gap-3">
           <CartIcon />
+          {user && (
+            <Link
+              href="/account"
+              className="relative rounded-2xl border border-slate-200 px-4 py-2 text-xs font-semibold text-slate-600 transition hover:bg-slate-50"
+            >
+              <span className="flex items-center gap-2">
+                🔔
+                {unreadNotifications > 0 && (
+                  <span className="absolute -right-1 -top-1 flex h-5 w-5 items-center justify-center rounded-full bg-rose-500 text-[10px] font-bold text-white">
+                    {unreadNotifications > 9 ? '9+' : unreadNotifications}
+                  </span>
+                )}
+              </span>
+            </Link>
+          )}
           {user ? (
             <div className="flex items-center gap-2">
               <Link

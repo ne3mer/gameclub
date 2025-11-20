@@ -23,6 +23,8 @@ export interface OrderDocument extends Document {
   customerInfo: CustomerInfo;
   items: OrderItem[];
   totalAmount: number;
+  couponCode?: string; // Applied coupon code
+  discountAmount?: number; // Discount amount applied
   paymentStatus: PaymentStatus;
   paymentReference?: string; // ZarinPal Authority
   fulfillmentStatus: FulfillmentStatus;
@@ -69,6 +71,8 @@ const orderSchema = new Schema<OrderDocument>(
       }
     ],
     totalAmount: { type: Number, required: true },
+    couponCode: { type: String },
+    discountAmount: { type: Number },
     paymentStatus: { type: String, enum: ['pending', 'paid', 'failed'], default: 'pending' },
     paymentReference: { type: String },
     fulfillmentStatus: { type: String, enum: ['pending', 'assigned', 'delivered', 'refunded'], default: 'pending' },

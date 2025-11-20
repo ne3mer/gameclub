@@ -1,9 +1,11 @@
 'use client';
 
 import { useEffect, useMemo, useState } from 'react';
+import Link from 'next/link';
 import { CreativeBanner } from '@/components/sections/CreativeBanner';
 import { defaultBannerContent, type BannerContent } from '@/data/marketing';
 import { API_BASE_URL, ADMIN_API_KEY, adminHeaders } from '@/lib/api';
+import { Icon } from '@/components/icons/Icon';
 
 type CampaignStatus = 'active' | 'paused' | 'draft';
 
@@ -334,21 +336,37 @@ export default function MarketingPage() {
 
   return (
     <div className="space-y-6">
-      <header className="flex flex-col gap-4 rounded-3xl border border-slate-100 bg-gradient-to-l from-slate-50 to-white p-6 sm:flex-row sm:items-center sm:justify-between">
+      <header className="flex flex-col gap-4 rounded-3xl border border-slate-200 bg-gradient-to-br from-emerald-50 via-white to-blue-50 p-6 sm:flex-row sm:items-center sm:justify-between shadow-lg">
         <div>
-          <p className="text-xs font-semibold text-emerald-500">مرکز بازاریابی GameClub</p>
-          <h1 className="text-2xl font-bold text-slate-900">مدیریت کمپین‌ها و دارایی‌های برند</h1>
-          <p className="text-sm text-slate-500">آمار لحظه‌ای، مدیریت بنر تعاملی و ابزارهای ساخت UTM در یک نما</p>
+          <div className="flex items-center gap-2 mb-2">
+            <Icon name="rocket" size={20} className="text-emerald-600" />
+          <p className="text-xs font-bold text-emerald-600 uppercase tracking-wider">مرکز بازاریابی</p>
+          </div>
+          <h1 className="text-3xl font-black text-slate-900 mb-2">کمپین‌ها و تبلیغات</h1>
+          <p className="text-sm text-slate-600">مدیریت کمپین‌ها، ساخت لینک‌های قابل ردیابی و آزمایش A/B</p>
           {lastSyncedAt && (
-            <p className="mt-2 text-xs text-slate-400">آخرین همگام‌سازی: {lastSyncedAt}</p>
+            <p className="mt-2 text-xs text-slate-500 flex items-center gap-2">
+              <span className="h-1.5 w-1.5 rounded-full bg-emerald-500"></span>
+              آخرین همگام‌سازی: {lastSyncedAt}
+            </p>
           )}
         </div>
         <button
           onClick={() => fetchMarketingData()}
           disabled={loading}
-          className="rounded-2xl bg-slate-900 px-5 py-3 text-sm font-bold text-white shadow hover:bg-slate-800 disabled:opacity-60"
+          className="flex items-center gap-2 rounded-2xl bg-gradient-to-r from-emerald-500 to-emerald-600 px-6 py-3 text-sm font-bold text-white shadow-lg shadow-emerald-500/30 hover:from-emerald-600 hover:to-emerald-700 disabled:opacity-60 transition-all duration-200 hover:scale-105"
         >
-          {loading ? 'در حال بروزرسانی...' : 'همگام‌سازی آمار'}
+          {loading ? (
+            <>
+              <Icon name="clock" size={16} />
+              در حال بروزرسانی...
+            </>
+          ) : (
+            <>
+              <Icon name="refresh" size={16} />
+              همگام‌سازی آمار
+            </>
+          )}
         </button>
       </header>
 
@@ -536,9 +554,14 @@ export default function MarketingPage() {
       </section>
 
       <section className="grid gap-6 lg:grid-cols-2">
-        <article className="rounded-3xl border border-slate-100 bg-white p-6 shadow-sm">
-          <h2 className="text-lg font-semibold text-slate-900">سازنده لینک UTM</h2>
-          <p className="text-sm text-slate-500">برای هر کمپین لینک قابل ردیابی بسازید</p>
+        <article className="rounded-3xl border border-slate-200 bg-gradient-to-br from-white to-slate-50 p-6 shadow-lg">
+          <div className="flex items-center gap-3 mb-4">
+            <Icon name="link" size={20} className="text-slate-600" />
+            <div>
+              <h2 className="text-lg font-black text-slate-900">سازنده لینک UTM</h2>
+              <p className="text-xs text-slate-500">برای هر کمپین لینک قابل ردیابی بسازید</p>
+            </div>
+          </div>
           <div className="mt-4 grid gap-4 text-sm text-slate-600 sm:grid-cols-2">
             {(['baseUrl', 'source', 'medium', 'campaign', 'term', 'content'] as (keyof UTMState)[]).map((field) => (
               <label key={field} className="block">
@@ -587,9 +610,14 @@ export default function MarketingPage() {
           </button>
         </article>
 
-        <article className="rounded-3xl border border-slate-100 bg-white p-6 shadow-sm">
-          <h2 className="text-lg font-semibold text-slate-900">مدیریت بنر خلاق</h2>
-          <p className="text-sm text-slate-500">متن، مزایا و CTA را ویرایش کنید</p>
+        <article className="rounded-3xl border border-slate-200 bg-gradient-to-br from-white to-purple-50/30 p-6 shadow-lg">
+          <div className="flex items-center gap-3 mb-4">
+            <Icon name="palette" size={20} className="text-purple-600" />
+            <div>
+              <h2 className="text-lg font-black text-slate-900">بنر خلاق (Legacy)</h2>
+              <p className="text-xs text-slate-500">برای مدیریت بنرهای پیشرفته‌تر از <Link href="/admin/banners" className="text-emerald-600 font-semibold hover:underline">سیستم بنرهای پویا</Link> استفاده کنید</p>
+            </div>
+          </div>
           <div className="mt-4 space-y-4 text-sm text-slate-600">
             <label className="block">
               عنوان بنر
