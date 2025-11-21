@@ -37,7 +37,7 @@ const fulfillmentStatusLabels: Record<string, string> = {
 
 const statusChip = (type: 'payment' | 'fulfillment', status: string) => {
   const base = 'rounded-full px-3 py-1 text-xs font-semibold';
-  const map =
+  const map: Record<string, string> =
     type === 'payment'
       ? {
           paid: `${base} bg-emerald-50 text-emerald-600`,
@@ -156,7 +156,7 @@ export default function OrdersPage() {
         limit: payload?.meta?.limit ?? meta.limit
       });
       if (data.length) {
-        setSelectedOrderId((prev) => prev && data.some((o) => o.id === prev) ? prev : data[0].id);
+        setSelectedOrderId((prev) => prev && data.some((o: AdminOrder) => o.id === prev) ? prev : data[0].id);
       } else {
         setSelectedOrderId(null);
       }

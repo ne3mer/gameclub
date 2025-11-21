@@ -130,82 +130,112 @@ export function DynamicBanner({ page, className = '' }: DynamicBannerProps) {
 
     switch (element.type) {
       case 'text':
-        return (
-          <ElementWrapper {...wrapperProps}>
-            <div
-              style={baseStyle}
-              className={getAnimationClass(element.style?.animation)}
-              dangerouslySetInnerHTML={{ __html: element.content }}
-            />
-          </ElementWrapper>
+        const textContent = (
+          <div
+            style={baseStyle}
+            className={getAnimationClass(element.style?.animation)}
+            dangerouslySetInnerHTML={{ __html: element.content }}
+          />
+        );
+        return element.href ? (
+          <Link href={element.href} target={element.target || '_self'} onClick={() => trackClick(bannerId)} className="block">
+            {textContent}
+          </Link>
+        ) : (
+          textContent
         );
 
       case 'image':
-        return (
-          <ElementWrapper {...wrapperProps}>
-            <div style={baseStyle} className="relative">
-              {element.imageUrl && (
-                <Image
-                  src={element.imageUrl}
-                  alt={element.content || 'Banner image'}
-                  fill
-                  className="object-contain"
-                  sizes="(max-width: 768px) 100vw, 50vw"
-                />
-              )}
-            </div>
-          </ElementWrapper>
+        const imageContent = (
+          <div style={baseStyle} className="relative">
+            {element.imageUrl && (
+              <Image
+                src={element.imageUrl}
+                alt={element.content || 'Banner image'}
+                fill
+                className="object-contain"
+                sizes="(max-width: 768px) 100vw, 50vw"
+              />
+            )}
+          </div>
+        );
+        return element.href ? (
+          <Link href={element.href} target={element.target || '_self'} onClick={() => trackClick(bannerId)} className="block">
+            {imageContent}
+          </Link>
+        ) : (
+          imageContent
         );
 
       case 'icon':
-        return (
-          <ElementWrapper {...wrapperProps}>
-            <div style={baseStyle} className="flex items-center justify-center">
-              <span className="text-4xl">{element.iconName || '🎮'}</span>
-            </div>
-          </ElementWrapper>
+        const iconContent = (
+          <div style={baseStyle} className="flex items-center justify-center">
+            <span className="text-4xl">{element.iconName || '🎮'}</span>
+          </div>
+        );
+        return element.href ? (
+          <Link href={element.href} target={element.target || '_self'} onClick={() => trackClick(bannerId)} className="block">
+            {iconContent}
+          </Link>
+        ) : (
+          iconContent
         );
 
       case 'button':
-        return (
-          <ElementWrapper {...wrapperProps}>
-            <button
-              style={baseStyle}
-              className={`rounded-2xl px-6 py-3 font-bold transition ${getAnimationClass(element.style?.animation)}`}
-            >
-              {element.content}
-            </button>
-          </ElementWrapper>
+        const buttonContent = (
+          <button
+            style={baseStyle}
+            className={`rounded-2xl px-6 py-3 font-bold transition ${getAnimationClass(element.style?.animation)}`}
+          >
+            {element.content}
+          </button>
+        );
+        return element.href ? (
+          <Link href={element.href} target={element.target || '_self'} onClick={() => trackClick(bannerId)} className="block">
+            {buttonContent}
+          </Link>
+        ) : (
+          buttonContent
         );
 
       case 'badge':
-        return (
-          <ElementWrapper {...wrapperProps}>
-            <span
-              style={baseStyle}
-              className={`inline-block rounded-full px-4 py-1 text-xs font-semibold ${getAnimationClass(element.style?.animation)}`}
-            >
-              {element.content}
-            </span>
-          </ElementWrapper>
+        const badgeContent = (
+          <span
+            style={baseStyle}
+            className={`inline-block rounded-full px-4 py-1 text-xs font-semibold ${getAnimationClass(element.style?.animation)}`}
+          >
+            {element.content}
+          </span>
+        );
+        return element.href ? (
+          <Link href={element.href} target={element.target || '_self'} onClick={() => trackClick(bannerId)} className="block">
+            {badgeContent}
+          </Link>
+        ) : (
+          badgeContent
         );
 
       case 'video':
-        return (
-          <ElementWrapper {...wrapperProps}>
-            <div style={baseStyle} className="relative">
-              {element.content && (
-                <video
-                  src={element.content}
-                  autoPlay
-                  loop
-                  muted
-                  playsInline
-                  className="h-full w-full object-cover"
-                />
-              )}
-            </div>
-          </ElementWrapper>
+        const videoContent = (
+          <div style={baseStyle} className="relative">
+            {element.content && (
+              <video
+                src={element.content}
+                autoPlay
+                loop
+                muted
+                playsInline
+                className="h-full w-full object-cover"
+              />
+            )}
+          </div>
+        );
+        return element.href ? (
+          <Link href={element.href} target={element.target || '_self'} onClick={() => trackClick(bannerId)} className="block">
+            {videoContent}
+          </Link>
+        ) : (
+          videoContent
         );
 
       default:
@@ -230,7 +260,7 @@ export function DynamicBanner({ page, className = '' }: DynamicBannerProps) {
       centered: 'flex flex-col items-center justify-center text-center',
       split: 'grid grid-cols-1 lg:grid-cols-2 gap-6 items-center',
       overlay: 'relative',
-      card: 'rounded-3xl border border-white/20 bg-white/10 backdrop-blur',
+      card: 'rounded-3xl border border-slate-100 bg-white shadow-[0_20px_60px_rgba(15,23,42,0.12)]',
       'full-width': 'w-full',
       floating: 'rounded-3xl shadow-2xl'
     };
@@ -317,4 +347,3 @@ export function DynamicBanner({ page, className = '' }: DynamicBannerProps) {
     </div>
   );
 }
-

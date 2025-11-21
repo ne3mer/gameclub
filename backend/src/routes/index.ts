@@ -16,6 +16,8 @@ import reviewRouter from "./review.route";
 import analyticsRouter from "./analytics.route";
 import profileRouter from "./profile.route";
 import telegramRouter from "./telegram.route";
+import categoryRouter from "./category.route";
+import gameRequestRouter from "./game-request.route";
 
 const router = Router();
 
@@ -36,5 +38,7 @@ router.use("/reviews", reviewRouter);
 router.use("/analytics", analyticsRouter);
 router.use("/profile", profileRouter);
 router.use("/telegram", telegramRouter);
+router.use("/categories", categoryRouter);
+router.use("/game-requests", gameRequestRouter);
 
 export default router;

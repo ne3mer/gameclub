@@ -134,6 +134,9 @@ SMTP_PORT=587
 SMTP_USER=your-email@gmail.com
 SMTP_PASS=your-app-password
 
+# Admin notification emails (optional fallback list)
+ADMIN_NOTIFICATION_EMAILS=admin1@example.com,admin2@example.com
+
 # Telegram Configuration
 TELEGRAM_BOT_TOKEN=your-bot-token
 TELEGRAM_CHAT_ID=your-chat-id

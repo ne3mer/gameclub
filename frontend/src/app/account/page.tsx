@@ -213,6 +213,11 @@ export default function AccountPage() {
                 }
               : undefined,
             customerAcknowledgement: order.customerAcknowledgement
+              ? {
+                  acknowledged: order.customerAcknowledgement.acknowledged ?? false,
+                  acknowledgedAt: order.customerAcknowledgement.acknowledgedAt
+                }
+              : undefined
           };
         });
         setOrders(normalized);
@@ -390,31 +395,31 @@ export default function AccountPage() {
 
   return (
     <div className="space-y-8 bg-slate-50 px-4 py-10 md:px-8">
-      <section className="relative overflow-hidden rounded-[36px] bg-gradient-to-l from-slate-900 via-slate-800 to-slate-700 p-8 text-white">
-        <div className="absolute inset-0 opacity-20">
-          <div className="absolute -right-10 top-10 h-40 w-40 rounded-full bg-emerald-400 blur-3xl" />
-          <div className="absolute left-10 -bottom-10 h-32 w-32 rounded-full bg-sky-400 blur-3xl" />
+      <section className="relative overflow-hidden rounded-[36px] border border-white bg-white p-8 text-slate-900 shadow-[0_25px_100px_rgba(15,23,42,0.12)]">
+        <div className="pointer-events-none absolute inset-0 opacity-60">
+          <div className="absolute -right-10 top-10 h-40 w-40 rounded-full bg-emerald-100 blur-3xl" />
+          <div className="absolute left-10 -bottom-10 h-32 w-32 rounded-full bg-sky-100 blur-3xl" />
         </div>
         <div className="relative flex flex-col gap-6 md:flex-row md:items-center md:justify-between">
           <div>
-            <p className="text-sm text-emerald-300">داشبورد مشتری GameClub</p>
-            <h1 className="mt-2 text-3xl font-black">{profile.name || 'کاربر GameClub'}</h1>
-            <p className="text-sm text-white/70">{profile.email}</p>
-            <div className="mt-4 flex flex-wrap gap-3 text-xs text-white/80">
-              <span className="rounded-full border border-white/30 px-3 py-1">
+            <p className="text-sm font-semibold text-emerald-600">داشبورد مشتری GameClub</p>
+            <h1 className="mt-2 text-3xl font-black text-slate-900">{profile.name || 'کاربر GameClub'}</h1>
+            <p className="text-sm text-slate-500">{profile.email}</p>
+            <div className="mt-4 flex flex-wrap gap-3 text-xs text-slate-600">
+              <span className="rounded-full border border-slate-200 bg-slate-50 px-3 py-1">
                 {profile.phone || 'شماره ثبت نشده'}
               </span>
-              <span className="rounded-full border border-white/30 px-3 py-1">
+              <span className="rounded-full border border-slate-200 bg-slate-50 px-3 py-1">
                 سطح: {summary.totalSpent > 20_000_000 ? 'Titanium' : 'Silver'}
               </span>
             </div>
           </div>
           <div className="flex items-center gap-3 text-right md:text-left">
-            <div className="rounded-3xl border border-white/20 bg-white/10 px-6 py-4 text-sm">
-              <p className="text-xs text-white/70">آخرین سفارش</p>
-              <p className="text-lg font-black">{summary.lastOrderDate}</p>
+            <div className="rounded-3xl border border-slate-100 bg-slate-50 px-6 py-4 text-sm shadow-inner">
+              <p className="text-xs text-slate-500">آخرین سفارش</p>
+              <p className="text-lg font-black text-slate-900">{summary.lastOrderDate}</p>
             </div>
-            <div className="flex h-16 w-16 items-center justify-center rounded-3xl border border-white/30 bg-white/10 text-xl font-black">
+            <div className="flex h-16 w-16 items-center justify-center rounded-3xl border border-slate-100 bg-white text-xl font-black text-slate-900 shadow-sm">
               {heroInitials}
             </div>
           </div>
@@ -529,7 +534,7 @@ export default function AccountPage() {
                       href={`https://t.me/GameClubSupportBot?start=order-${order.orderNumber ?? order.id}`}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="flex-1 rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-2 text-center text-emerald-600 hover:bg-emerald-100"
+                      className="flex-1 rounded-2xl border border-[#d1d1d6] bg-white px-4 py-2 text-center text-slate-700 hover:border-[#0a84ff]/40 hover:text-[#0a84ff]"
                     >
                       گفتگو با پشتیبانی
                     </a>
@@ -540,6 +545,38 @@ export default function AccountPage() {
           )}
         </div>
         <LoyaltyColumn summary={summary} />
+      </section>
+
+      {/* Game Request Card */}
+      <section>
+        <Link 
+          href="/account/requests"
+          className="group block overflow-hidden rounded-3xl border border-purple-200 bg-gradient-to-br from-purple-500 to-indigo-600 p-8 shadow-2xl shadow-purple-500/30 transition hover:scale-[1.02] hover:shadow-purple-500/50"
+        >
+          <div className="flex items-start justify-between gap-4">
+            <div className="flex-1">
+              <div className="mb-3 inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/10 backdrop-blur-sm px-4 py-2">
+                <div className="h-2 w-2 rounded-full bg-white animate-pulse" />
+                <span className="text-xs font-bold uppercase tracking-wide text-white">
+                  ویژه
+                </span>
+              </div>
+              <h3 className="mb-2 text-2xl font-black text-white">
+                بازی مورد نظرت رو پیدا نکردی؟
+              </h3>
+              <p className="mb-4 text-white/90">
+                درخواست بده و ما اضافه‌ش می‌کنیم! فرم خلاقانه با انتخابگر پلتفرم و منطقه
+              </p>
+              <div className="flex items-center gap-2 text-sm font-bold text-white">
+                <span>ثبت درخواست</span>
+                <Icon name="arrow-left" size={16} className="transition-transform group-hover:-translate-x-1" />
+              </div>
+            </div>
+            <div className="flex h-16 w-16 items-center justify-center rounded-2xl border border-white/20 bg-white/10 backdrop-blur-sm text-white">
+              <Icon name="game" size={32} />
+            </div>
+          </div>
+        </Link>
       </section>
 
       <section className="grid gap-6 lg:grid-cols-2">
@@ -558,8 +595,8 @@ export default function AccountPage() {
 }
 
 const StatCard = ({ label, value, icon }: { label: string; value: string | number; icon?: string }) => (
-  <article className="group relative overflow-hidden rounded-3xl border border-slate-100 bg-white p-6 shadow-sm transition-all hover:shadow-md hover:border-emerald-200">
-    <div className="absolute -right-4 -top-4 h-20 w-20 rounded-full bg-emerald-100/50 blur-2xl transition-all group-hover:bg-emerald-200/50"></div>
+  <article className="group relative overflow-hidden rounded-3xl border border-[#e5e5ea] bg-white p-6 shadow-sm transition-all hover:shadow-md hover:border-[#0a84ff]/30">
+    <div className="absolute -right-4 -top-4 h-20 w-20 rounded-full bg-[#eef1f7] blur-2xl transition-all group-hover:bg-[#dfe5f1]"></div>
     <div className="relative">
       {icon && (
         <div className="mb-2 text-slate-600">
@@ -578,18 +615,18 @@ const LoyaltyColumn = ({ summary }: { summary: { totalSpent: number; totalOrders
 
   return (
     <aside className="space-y-4">
-      <div className="rounded-3xl border border-emerald-200 bg-gradient-to-br from-emerald-500 to-emerald-600 p-6 text-white shadow-lg">
-        <p className="text-xs uppercase tracking-widest text-emerald-100">GameClub Loyalty</p>
+      <div className="rounded-3xl border border-[#e5e5ea] bg-gradient-to-br from-[#111113] to-[#1d1d1f] p-6 text-white shadow-xl">
+        <p className="text-xs uppercase tracking-widest text-white/70">GameClub Loyalty</p>
         <h3 className="mt-2 text-2xl font-black">{tier} Member</h3>
-        <p className="mt-2 text-sm text-emerald-100">
+        <p className="mt-2 text-sm text-white/70">
           با خرید بیشتر، مزایای اختصاصی مثل پشتیبانی VIP و تخفیف Safe Account دریافت کنید.
         </p>
         <div className="mt-4">
-          <div className="flex justify-between text-xs text-emerald-50">
+          <div className="flex justify-between text-xs text-white/60">
             <span>پیشرفت</span>
             <span>{progress}%</span>
           </div>
-          <div className="mt-2 h-2 rounded-full bg-emerald-900/40">
+          <div className="mt-2 h-2 rounded-full bg-white/20">
             <div className="h-full rounded-full bg-white" style={{ width: `${progress}%` }} />
           </div>
         </div>
@@ -733,7 +770,7 @@ const ProfileFormCard = ({
       ) : (
         <>
           <Icon name="save" size={16} />
-          ذخیره تغییرات
+      ذخیره تغییرات
         </>
       )}
     </button>

@@ -55,7 +55,13 @@ import {
   Heart,
   ThumbsUp,
   TrendingDown,
-  Activity
+  Activity,
+  ChevronUp,
+  ChevronDown,
+  ArrowLeft,
+  Layers,
+  Globe,
+  Info
 } from 'lucide-react';
 import { type LucideIcon } from 'lucide-react';
 
@@ -114,7 +120,13 @@ type IconName =
   | 'heart'
   | 'thumbs-up'
   | 'trending-down'
-  | 'activity';
+  | 'activity'
+  | 'chevron-up'
+  | 'chevron-down'
+  | 'arrow-left'
+  | 'layers'
+  | 'globe'
+  | 'info';
 
 const iconMap: Record<IconName, LucideIcon> = {
   dashboard: LayoutDashboard,
@@ -171,7 +183,13 @@ const iconMap: Record<IconName, LucideIcon> = {
   heart: Heart,
   'thumbs-up': ThumbsUp,
   'trending-down': TrendingDown,
-  activity: Activity
+  activity: Activity,
+  'chevron-up': ChevronUp,
+  'chevron-down': ChevronDown,
+  'arrow-left': ArrowLeft,
+  layers: Layers,
+  globe: Globe,
+  info: Info
 };
 
 interface IconProps {

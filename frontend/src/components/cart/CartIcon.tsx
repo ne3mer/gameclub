@@ -37,7 +37,7 @@ export const CartIcon = () => {
 
       {/* Dropdown */}
       <div className="invisible absolute left-0 top-full mt-4 w-80 opacity-0 transition-all duration-200 group-hover:visible group-hover:mt-2 group-hover:opacity-100">
-        <div className="overflow-hidden rounded-3xl border border-slate-100 bg-white shadow-xl ring-1 ring-slate-900/5">
+        <div className="overflow-hidden rounded-3xl border border-slate-100 bg-white shadow-xl">
           <div className="p-4">
             <div className="mb-3 flex items-center justify-between">
               <h3 className="font-bold text-slate-900">سبد خرید شما</h3>

@@ -2,7 +2,7 @@
 
 import { useState, useRef, useEffect } from 'react';
 import Image from 'next/image';
-import { API_BASE_URL, adminHeaders } from '@/lib/api';
+import { API_BASE_URL, adminHeaders, resolveImageUrl } from '@/lib/api';
 
 interface MultiImageUploadProps {
   currentImages?: string[];
@@ -23,7 +23,7 @@ export function MultiImageUpload({
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
-    setImages(currentImages);
+    setImages(currentImages.map((img) => resolveImageUrl(img)));
   }, [currentImages]);
 
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -63,7 +63,10 @@ export function MultiImageUpload({
 
         if (response.ok) {
           const data = await response.json();
-          uploadedUrls.push(`${API_BASE_URL}${data.data.url}`);
+          const imageUrl = resolveImageUrl(data.data?.url);
+          if (imageUrl) {
+            uploadedUrls.push(imageUrl);
+          }
         }
       }
 

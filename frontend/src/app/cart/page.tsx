@@ -73,7 +73,7 @@ export default function CartPage() {
                       ? Object.entries(item.selectedOptions)
                           .map(([k, v]) => `${v}`)
                           .join(' | ')
-                      : `${item.gameId.platform} / استاندارد`}
+                      : 'استاندارد'}
                   </div>
                   <div className="font-bold text-slate-900">{formatToman(item.priceAtAdd)} تومان</div>
                 </div>

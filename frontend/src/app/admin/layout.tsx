@@ -26,10 +26,13 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       title: 'فروش و سفارشات',
       items: [
         { href: '/admin/products', label: 'محصولات', icon: 'game' },
+        { href: '/admin/categories', label: 'دسته‌بندی‌ها', icon: 'layers' },
         { href: '/admin/orders', label: 'سفارشات', icon: 'package' },
+        { href: '/admin/requests', label: 'درخواست‌های بازی', icon: 'message' },
         { href: '/admin/users', label: 'کاربران', icon: 'users' },
-        { href: '/admin/reviews', label: 'نظرات', icon: 'message' },
-        { href: '/admin/analytics', label: 'آنالیتیکس', icon: 'chart' }
+        { href: '/admin/reviews', label: 'نظرات', icon: 'star' },
+        { href: '/admin/analytics', label: 'آنالیتیکس فروش', icon: 'chart' },
+        { href: '/admin/pageviews', label: 'آمار بازدید', icon: 'eye' }
       ]
     },
     {

@@ -14,6 +14,9 @@ import {
   deleteReview,
   getReviewStats
 } from '../services/review.service';
+import { GameModel } from '../models/game.model';
+import { UserModel } from '../models/user.model';
+import { notifyAdminsOfEvent } from '../services/adminNotification.service';
 
 export const createReviewController = [
   validateResource(createReviewSchema),
@@ -29,6 +32,23 @@ export const createReviewController = [
       }
 
       const review = await createReview(userId, req.body);
+
+      const [game, user] = await Promise.all([
+        GameModel.findById(review.gameId).select('title').lean(),
+        UserModel.findById(userId).select('name email').lean()
+      ]);
+
+      notifyAdminsOfEvent({
+        type: 'review_submitted',
+        reviewId: review._id.toString(),
+        gameTitle: game?.title || 'بازی ناشناس',
+        rating: review.rating,
+        comment: review.comment,
+        createdAt: review.createdAt,
+        submittedBy: user ? { name: user.name, email: user.email } : undefined
+      }).catch((error) => {
+        console.error('Failed to notify admins about new review:', error);
+      });
       
       res.status(201).json({
         success: true,
@@ -158,4 +178,6 @@ export const getReviewStatsController = async (req: Request, res: Response) => {
     });
   }
 };
+
+
 

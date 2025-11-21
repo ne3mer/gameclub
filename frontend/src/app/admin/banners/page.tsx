@@ -30,7 +30,13 @@ function BannerPreview({ banner }: { banner: any }) {
     >
       {banner.background?.type === 'image' && banner.background.imageUrl && (
         <div className="absolute inset-0">
-          <Image src={banner.background.imageUrl} alt="" fill className="object-cover" />
+          <Image
+            src={banner.background.imageUrl}
+            alt=""
+            fill
+            sizes="(max-width: 768px) 100vw, 50vw"
+            className="object-cover"
+          />
         </div>
       )}
       <div className="relative z-10 flex flex-wrap items-center gap-4">
@@ -242,4 +248,3 @@ export default function BannersPage() {
     </div>
   );
 }
-

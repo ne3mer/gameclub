@@ -326,8 +326,8 @@ export function PriceAlertModal({
                 loading ||
                 !destination ||
                 (!existingAlert && !selectedGameId) ||
-                (selectedGame && targetPrice >= selectedGame.price) ||
-                (gameId && currentPrice && targetPrice >= currentPrice)
+                Boolean(selectedGame && targetPrice >= selectedGame.price) ||
+                Boolean(gameId && currentPrice && targetPrice >= currentPrice)
               }
               className="flex-1 rounded-xl bg-emerald-500 px-4 py-3 text-sm font-bold text-white hover:bg-emerald-600 disabled:opacity-50 disabled:cursor-not-allowed transition"
             >

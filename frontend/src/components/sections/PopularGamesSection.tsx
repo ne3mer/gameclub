@@ -1,7 +1,8 @@
 'use client';
 
+import Link from 'next/link';
 import { useEffect, useState } from 'react';
-import { GameCard } from '@/components/cards/GameCard';
+import { CompactGameCard, type CompactGame } from '@/components/cards/CompactGameCard';
 import { API_BASE_URL } from '@/lib/api';
 import type { GameCardContent } from '@/data/home';
 
@@ -60,12 +61,12 @@ export const PopularGamesSection = () => {
 
   return (
     <section className="space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-wrap items-end justify-between gap-2">
         <div>
-          <p className="text-sm text-emerald-600">پرفروش‌های این هفته</p>
-          <h2 className="text-2xl font-semibold text-slate-900">بازی‌های محبوب GameClub</h2>
+          <p className="text-xs font-semibold uppercase tracking-[0.35em] text-[#0a84ff]">پرفروش‌های این هفته</p>
+          <h2 className="text-2xl font-black text-slate-900">بازی‌های محبوب GameClub</h2>
         </div>
-        <button className="text-sm font-semibold text-emerald-600">مشاهده همه</button>
+        <LinkButton href="/games?sort=popular">مشاهده همه</LinkButton>
       </div>
       
       {loading && (
@@ -90,14 +91,35 @@ export const PopularGamesSection = () => {
       )}
       
       {!loading && !error && games.length > 0 && (
-        <div className="flex gap-4 overflow-x-auto pb-2 no-scrollbar scroll-smooth">
-          {games.map((game) => (
-            <div key={game.id} className="flex-shrink-0 w-[280px] sm:w-[320px] md:w-[360px]">
-              <GameCard game={game} />
-            </div>
+        <div className="grid gap-4 lg:grid-cols-2">
+          {games.slice(0, 4).map((game) => (
+            <CompactGameCard
+              key={game.id}
+              game={{
+                id: game.id,
+                slug: game.slug,
+                cover: game.cover,
+                price: game.price,
+                platform: game.platform,
+                title: game.title,
+                tag: 'Top'
+              } satisfies CompactGame}
+            />
           ))}
         </div>
       )}
     </section>
   );
 };
+
+const LinkButton = ({ href, children }: { href: string; children: React.ReactNode }) => (
+  <Link
+    href={href}
+    className="inline-flex items-center gap-2 rounded-2xl border border-[#d1d1d6] px-4 py-2 text-xs font-semibold text-slate-700 transition hover:border-[#0a84ff]/40 hover:text-[#0a84ff]"
+  >
+    {children}
+    <svg className="h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+    </svg>
+  </Link>
+);

@@ -19,6 +19,7 @@ export interface HeroContent {
     href: string;
   };
   stats: HeroStat[];
+  image?: string;
 }
 
 export interface Spotlight {
@@ -47,6 +48,7 @@ export interface Testimonial {
 
 export interface HomeContentDocument extends Document {
   hero: HeroContent;
+  heroSlides: HeroContent[];
   spotlights: Spotlight[];
   trustSignals: TrustSignal[];
   testimonials: Testimonial[];
@@ -78,7 +80,8 @@ const heroSchema = new Schema<HeroContent>(
     subtitle: { type: String, required: true },
     primaryCta: { type: ctaSchema, required: true },
     secondaryCta: { type: ctaSchema, required: true },
-    stats: { type: [heroStatSchema], default: [] }
+    stats: { type: [heroStatSchema], default: [] },
+    image: { type: String }
   },
   { _id: false }
 );
@@ -119,6 +122,7 @@ const testimonialSchema = new Schema<Testimonial>(
 const homeContentSchema = new Schema<HomeContentDocument>(
   {
     hero: { type: heroSchema, required: true },
+    heroSlides: { type: [heroSchema], default: [] },
     spotlights: { type: [spotlightSchema], default: [] },
     trustSignals: { type: [trustSchema], default: [] },
     testimonials: { type: [testimonialSchema], default: [] }

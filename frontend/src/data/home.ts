@@ -10,6 +10,8 @@ export type GameCardContent = {
   category: string;
   rating: number;
   cover: string;
+  description?: string;
+  tags?: string[];
 };
 
 export const popularGames: GameCardContent[] = [

@@ -1,11 +1,13 @@
+import { Suspense } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { SearchBar } from "@/components/filters/SearchBar";
+import { HeroCarousel } from "@/components/sections/HeroCarousel";
 import { CreativeBanner } from "@/components/sections/CreativeBanner";
 import { DynamicBanner } from "@/components/banners/DynamicBanner";
 import { NewArrivalsSection } from "@/components/sections/NewArrivalsSection";
 import { PopularGamesSection } from "@/components/sections/PopularGamesSection";
-import { CategoriesSection } from "@/components/sections/CategoriesSection";
+import { CategoriesSection, type CategoryHighlight } from "@/components/sections/CategoriesSection";
 import { TrustSection } from "@/components/sections/TrustSection";
 import { TestimonialsSection } from "@/components/sections/TestimonialsSection";
 import { SiteFooter } from "@/components/layout/SiteFooter";
@@ -16,8 +18,10 @@ import {
   type HeroContent,
   type Spotlight as CMSHighlight,
 } from "@/data/homeContent";
+import { categories as defaultCategories } from "@/data/home";
 import { formatToman } from "@/lib/format";
 import { API_BASE_URL } from "@/lib/api";
+import { Icon } from "@/components/icons/Icon";
 
 type MarketingSnapshot = {
   settings: {
@@ -84,370 +88,249 @@ const fetchFeaturedGames = async (): Promise<BackendGame[]> => {
   }
 };
 
-export default async function HomePage() {
-  const [snapshot, homeSettings, featuredGames] = await Promise.all([
-    fetchMarketingSnapshot(),
-    fetchHomeSettings(),
-    fetchFeaturedGames(),
-  ]);
-  const bannerContent =
-    snapshot?.settings?.bannerContent ?? defaultBannerContent;
-  const homeContent = homeSettings ?? defaultHomeContent;
+const fetchCategories = async (): Promise<CategoryHighlight[]> => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/api/categories?active=true`, {
+      next: { revalidate: 300 },
+    });
+    if (!response.ok) throw new Error("Failed to load categories");
+    const payload = await response.json();
+    const data = Array.isArray(payload?.data) ? payload.data : [];
+    return data.map((category: any) => ({
+      id: category.id ?? category._id ?? category.slug,
+      name: category.name ?? category.title ?? category.nameEn ?? "دسته‌بندی",
+      slug: category.slug ?? "",
+      description: category.description ?? "",
+      icon: category.icon ?? "🎮",
+      color: category.color ?? "blue",
+    }));
+  } catch (error) {
+    console.warn("Categories unavailable:", error);
+    return defaultCategories;
+  }
+};
+
+type Spotlight = {
+  id: string;
+  title: string;
+  description: string;
+  href: string;
+  accent: string;
+};
+
+function SpotlightTiles({ highlights }: { highlights: Spotlight[] }) {
+  const accentColors: Record<string, { bg: string; text: string; border: string; glow: string }> = {
+    emerald: {
+      bg: 'bg-gradient-to-br from-emerald-500 to-emerald-600',
+      text: 'text-emerald-600',
+      border: 'border-emerald-200',
+      glow: 'shadow-emerald-500/30'
+    },
+    indigo: {
+      bg: 'bg-gradient-to-br from-indigo-500 to-indigo-600',
+      text: 'text-indigo-600',
+      border: 'border-indigo-200',
+      glow: 'shadow-indigo-500/30'
+    },
+    purple: {
+      bg: 'bg-gradient-to-br from-purple-500 to-purple-600',
+      text: 'text-purple-600',
+      border: 'border-purple-200',
+      glow: 'shadow-purple-500/30'
+    },
+    slate: {
+      bg: 'bg-gradient-to-br from-slate-700 to-slate-800',
+      text: 'text-slate-700',
+      border: 'border-slate-200',
+      glow: 'shadow-slate-500/30'
+    },
+  };
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-slate-950 via-slate-900 to-slate-950 overflow-x-hidden">
-      {/* Animated Background Elements */}
-      <div className="fixed inset-0 overflow-hidden pointer-events-none z-0">
-        <div className="absolute top-1/4 left-1/4 h-96 w-96 rounded-full bg-emerald-500/10 blur-3xl animate-pulse" />
-        <div className="absolute bottom-1/4 right-1/4 h-96 w-96 rounded-full bg-blue-500/10 blur-3xl animate-pulse delay-1000" />
-        <div className="absolute top-1/2 right-1/3 h-64 w-64 rounded-full bg-purple-500/10 blur-3xl animate-pulse delay-500" />
+    <div className="grid gap-6 md:grid-cols-3">
+      {highlights.map((highlight) => {
+        const colors = accentColors[highlight.accent] || accentColors.emerald;
+        return (
+          <Link
+            key={highlight.id}
+            href={highlight.href}
+            className="group relative overflow-hidden rounded-3xl border border-slate-100 bg-white p-8 transition hover:shadow-2xl"
+          >
+            <div className={`absolute top-0 right-0 h-32 w-32 rounded-full ${colors.bg} opacity-10 blur-3xl transition group-hover:opacity-20`} />
+            <div className="relative">
+              <h3 className="mb-3 text-2xl font-black text-slate-900">
+                {highlight.title}
+              </h3>
+              <p className="mb-4 text-slate-600 leading-relaxed">
+                {highlight.description}
+              </p>
+              <div className={`inline-flex items-center gap-2 text-sm font-bold ${colors.text} transition group-hover:gap-3`}>
+                <span>مشاهده بیشتر</span>
+                <Icon name="arrow-left" size={16} />
+              </div>
+            </div>
+          </Link>
+        );
+      })}
+    </div>
+  );
+}
+
+function ProductShowcase({ games }: { games: BackendGame[] }) {
+  if (!games || games.length === 0) return null;
+
+  return (
+    <div className="space-y-8">
+      <div className="flex items-center justify-between">
+        <div>
+          <h2 className="text-4xl font-black text-slate-900">جدیدترین بازی‌ها</h2>
+          <p className="mt-2 text-slate-600">تازه‌ترین بازی‌های اضافه شده به کاتالوگ</p>
+        </div>
+        <Link
+          href="/games"
+          className="rounded-2xl border border-slate-200 bg-white px-6 py-3 text-sm font-bold text-slate-700 transition hover:bg-slate-50"
+        >
+          مشاهده همه
+        </Link>
       </div>
 
-      <div className="relative mx-auto w-full max-w-7xl flex flex-col gap-16 px-4 py-12 md:px-8 z-10">
-        {/* Hero Section */}
-        <section className="w-full">
-          <HeroShowcase hero={homeContent.hero} />
-        </section>
+      <div className="grid gap-6 md:grid-cols-3">
+        {games.map((game, index) => {
+          const gradients = [
+            'from-purple-500/10 to-pink-500/10',
+            'from-blue-500/10 to-cyan-500/10',
+            'from-emerald-500/10 to-teal-500/10'
+          ];
+          
+          return (
+            <Link
+              key={game.id}
+              href={`/games/${game.slug}`}
+              className="group relative overflow-hidden rounded-3xl border border-slate-100 bg-white transition hover:shadow-2xl"
+            >
+              {/* Image */}
+              <div className="relative aspect-[16/10] overflow-hidden bg-gradient-to-br ${gradients[index % 3]}">
+                {game.coverUrl ? (
+                  <Image
+                    src={game.coverUrl}
+                    alt={game.title}
+                    fill
+                    className="object-cover transition duration-500 group-hover:scale-110"
+                  />
+                ) : (
+                  <div className={`flex h-full items-center justify-center bg-gradient-to-br ${gradients[index % 3]}`}>
+                    <Icon name="game" size={48} className="text-slate-400" />
+                  </div>
+                )}
+                
+                {/* Platform Badge */}
+                <div className="absolute top-4 right-4 rounded-full border border-white/20 bg-white/90 backdrop-blur-sm px-3 py-1.5 text-xs font-bold text-slate-900">
+                  {game.platform}
+                </div>
+              </div>
 
-        {/* Dynamic Banners */}
-        <section className="w-full">
-          <DynamicBanner page="home" />
-        </section>
-
-        {/* Search Bar */}
-        <section className="relative z-10 w-full">
-          <SearchBar />
-        </section>
-
-        {/* Spotlight Tiles */}
-        <section className="w-full">
-          <SpotlightTiles highlights={homeContent.spotlights} />
-        </section>
-
-        {/* Featured Games Showcase */}
-        <section className="w-full">
-          <ProductShowcase games={featuredGames} />
-        </section>
-
-        {/* Marketing Banner */}
-        <section className="w-full">
-          <CreativeBanner content={bannerContent} />
-        </section>
-
-        {/* New Arrivals */}
-        <section className="w-full">
-          <NewArrivalsSection />
-        </section>
-
-        {/* Popular Games */}
-        <section className="w-full">
-          <PopularGamesSection />
-        </section>
-
-        {/* Categories */}
-        <section className="w-full">
-          <CategoriesSection />
-        </section>
-
-        {/* Trust Signals */}
-        <section className="w-full">
-          <TrustSection signals={homeContent.trustSignals} />
-        </section>
-
-        {/* Testimonials */}
-        <section className="w-full">
-          <TestimonialsSection testimonials={homeContent.testimonials} />
-        </section>
-
-        {/* Footer */}
-        <footer className="w-full">
-          <SiteFooter />
-        </footer>
+              {/* Content */}
+              <div className="p-6">
+                <h3 className="mb-2 text-xl font-black text-slate-900 line-clamp-1">
+                  {game.title}
+                </h3>
+                <p className="mb-4 text-sm text-slate-600 line-clamp-2">
+                  {game.description}
+                </p>
+                
+                <div className="flex items-center justify-between">
+                  <span className="text-2xl font-black text-emerald-600">
+                    {formatToman(game.basePrice)}
+                  </span>
+                  <div className="flex items-center gap-2 text-sm font-bold text-slate-700 transition group-hover:text-emerald-600">
+                    <span>خرید</span>
+                    <Icon name="arrow-left" size={16} />
+                  </div>
+                </div>
+              </div>
+            </Link>
+          );
+        })}
       </div>
     </div>
   );
 }
 
-const HeroShowcase = ({ hero }: { hero: HeroContent }) => {
-  return (
-    <section className="relative overflow-hidden rounded-[48px] border-2 border-emerald-500/20 bg-gradient-to-br from-slate-900 via-emerald-950/50 to-slate-900 p-8 md:p-16 text-white shadow-2xl backdrop-blur-sm">
-      {/* Animated Background Pattern */}
-      <div className="absolute inset-0 opacity-10">
-        <div className="absolute -right-32 top-10 h-96 w-96 rounded-full bg-emerald-400 blur-3xl animate-pulse" />
-        <div className="absolute left-12 -bottom-20 h-80 w-80 rounded-full bg-blue-400 blur-3xl animate-pulse delay-700" />
-        <div className="absolute top-1/2 left-1/2 h-64 w-64 rounded-full bg-purple-400 blur-3xl animate-pulse delay-1000" />
-      </div>
+export default async function HomePage() {
+  const [marketingSnapshot, homeSettings, featuredGames, categories] = await Promise.all([
+    fetchMarketingSnapshot(),
+    fetchHomeSettings(),
+    fetchFeaturedGames(),
+    fetchCategories(),
+  ]);
 
-      {/* Grid Pattern Overlay */}
-      <div className="absolute inset-0 bg-[linear-gradient(to_right,#ffffff08_1px,transparent_1px),linear-gradient(to_bottom,#ffffff08_1px,transparent_1px)] bg-[size:4rem_4rem]" />
+  const bannerContent = marketingSnapshot?.settings?.bannerContent ?? defaultBannerContent;
+  const homeContent = homeSettings ?? defaultHomeContent;
+  const categoriesDisplay = categories.length > 0 ? categories : defaultCategories;
 
-      <div className="relative z-10 flex flex-col gap-10 lg:flex-row lg:items-center lg:justify-between">
-        <div className="space-y-6 flex-1">
-          <div className="inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-emerald-500/20 to-blue-500/20 border border-emerald-500/30 px-5 py-2 backdrop-blur-sm">
-            <span className="h-2 w-2 rounded-full bg-emerald-400 animate-pulse" />
-            <span className="text-sm font-bold uppercase tracking-wider text-emerald-300">
-              {hero.badge}
-            </span>
-          </div>
-
-          <h1 className="text-5xl md:text-7xl font-black leading-tight bg-gradient-to-r from-white via-emerald-100 to-white bg-clip-text text-transparent">
-            {hero.title}
-          </h1>
-
-          <p className="text-lg md:text-xl text-slate-300 max-w-2xl leading-relaxed">
-            {hero.subtitle}
-          </p>
-
-          <div className="flex flex-wrap gap-4">
-            <Link
-              href={hero.primaryCta.href}
-              className="group relative overflow-hidden rounded-2xl bg-gradient-to-r from-emerald-500 to-emerald-600 px-8 py-4 text-base font-black text-white shadow-lg shadow-emerald-500/30 transition-all duration-300 hover:scale-105 hover:shadow-emerald-500/50"
-            >
-              <span className="relative z-10 flex items-center gap-2">
-                {hero.primaryCta.label}
-                <svg
-                  className="h-5 w-5 transition-transform group-hover:translate-x-1"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M13 7l5 5m0 0l-5 5m5-5H6"
-                  />
-                </svg>
-              </span>
-              <div className="absolute inset-0 bg-gradient-to-r from-emerald-400 to-emerald-500 opacity-0 transition-opacity group-hover:opacity-100" />
-            </Link>
-            <Link
-              href={hero.secondaryCta.href}
-              className="rounded-2xl border-2 border-white/20 bg-white/5 backdrop-blur-sm px-8 py-4 text-base font-bold text-white transition-all duration-300 hover:bg-white/10 hover:border-white/40"
-            >
-              {hero.secondaryCta.label}
-            </Link>
-          </div>
-        </div>
-
-        {/* Stats Grid */}
-        <div className="grid grid-cols-2 gap-4 rounded-[32px] border border-white/10 bg-white/5 backdrop-blur-md p-6 w-full lg:max-w-md">
-          <p className="col-span-2 text-sm font-semibold text-emerald-300 mb-2">
-            📊 آمار زنده
-          </p>
-          {hero.stats.map((stat) => (
-            <div
-              key={stat.id}
-              className="group relative overflow-hidden rounded-2xl border border-white/10 bg-gradient-to-br from-white/5 to-transparent p-4 backdrop-blur-sm transition-all hover:border-emerald-500/30 hover:bg-white/10"
-            >
-              <p className="text-xs font-semibold text-slate-400 mb-1">
-                {stat.label}
-              </p>
-              <p className="text-2xl font-black text-white">{stat.value}</p>
-              <div className="absolute -right-2 -top-2 h-16 w-16 rounded-full bg-emerald-500/10 blur-xl opacity-0 transition-opacity group-hover:opacity-100" />
-            </div>
-          ))}
-        </div>
-      </div>
-    </section>
-  );
-};
-
-const SpotlightTiles = ({ highlights }: { highlights: CMSHighlight[] }) => {
-  if (!highlights.length) return null;
-
-  const accentGradients = {
-    emerald:
-      "from-emerald-500/20 via-emerald-500/10 to-transparent border-emerald-500/30",
-    indigo:
-      "from-indigo-500/20 via-indigo-500/10 to-transparent border-indigo-500/30",
-    slate:
-      "from-slate-500/20 via-slate-500/10 to-transparent border-slate-500/30",
-  };
+  const heroSlides: HeroContent[] =
+    homeContent.heroSlides && homeContent.heroSlides.length > 0
+      ? homeContent.heroSlides
+      : [homeContent.hero];
 
   return (
-    <section className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 w-full">
-      {highlights.map((block) => (
-        <Link
-          key={block.id}
-          href={block.href}
-          className="group relative overflow-hidden rounded-[32px] border-2 bg-gradient-to-br from-slate-800/80 to-slate-900/80 backdrop-blur-sm p-6 shadow-xl transition-all duration-500 hover:scale-105 hover:shadow-2xl"
-          style={{
-            borderColor:
-              block.accent === "emerald"
-                ? "rgba(16, 185, 129, 0.3)"
-                : block.accent === "indigo"
-                ? "rgba(99, 102, 241, 0.3)"
-                : "rgba(148, 163, 184, 0.3)",
-          }}
-        >
-          {/* Animated Background */}
-          <div
-            className={`absolute inset-0 bg-gradient-to-br ${
-              accentGradients[block.accent as keyof typeof accentGradients]
-            } opacity-0 transition-opacity duration-500 group-hover:opacity-100`}
-          />
+    <>
+      <main className="min-h-screen bg-gradient-to-b from-slate-50 to-white">
+        <div className="mx-auto max-w-7xl space-y-20 px-6 py-12 md:px-8">
+          
+          {/* Hero Carousel */}
+          <section className="w-full">
+            <HeroCarousel slides={heroSlides} />
+          </section>
 
-          {/* Content */}
-          <div className="relative z-10 space-y-4">
-            <div className="flex items-center gap-3">
-              <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-white/10 backdrop-blur-sm text-2xl">
-                {block.accent === "emerald"
-                  ? "⚡"
-                  : block.accent === "indigo"
-                  ? "🎮"
-                  : "💎"}
-              </div>
-              <h3 className="text-xl font-black text-white">{block.title}</h3>
-            </div>
-            <p className="text-sm text-slate-300 leading-relaxed">
-              {block.description}
-            </p>
-            <div className="flex items-center gap-2 text-sm font-bold text-emerald-400">
-              <span>مشاهده</span>
-              <svg
-                className="h-4 w-4 transition-transform group-hover:translate-x-1"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M9 5l7 7-7 7"
-                />
-              </svg>
-            </div>
-          </div>
+          {/* Dynamic Banners */}
+          <section className="w-full">
+            <DynamicBanner page="home" />
+          </section>
 
-          {/* Hover Glow Effect */}
-          <div className="absolute -inset-1 rounded-[32px] bg-gradient-to-r from-emerald-500/0 via-emerald-500/50 to-emerald-500/0 opacity-0 blur-xl transition-opacity duration-500 group-hover:opacity-20" />
-        </Link>
-      ))}
-    </section>
-  );
-};
+          {/* Spotlight Tiles */}
+          <section className="w-full">
+            <SpotlightTiles highlights={homeContent.spotlights} />
+          </section>
 
-const ProductShowcase = ({ games }: { games: BackendGame[] }) => {
-  if (!games || games.length === 0) {
-    return null;
-  }
+          {/* Featured Games Showcase */}
+          <section className="w-full">
+            <ProductShowcase games={featuredGames} />
+          </section>
 
-  return (
-    <section className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <p className="text-sm font-bold text-emerald-400 mb-1">
-            🎯 انتخاب ویژه
-          </p>
-          <h2 className="text-3xl md:text-4xl font-black text-white">
-            ویترین بازی‌های برتر
-          </h2>
+          {/* Marketing Banner */}
+          <section className="w-full">
+            <CreativeBanner content={bannerContent} />
+          </section>
+
+          {/* New Arrivals */}
+          <section className="w-full">
+            <NewArrivalsSection />
+          </section>
+
+          {/* Popular Games */}
+          <section className="w-full">
+            <PopularGamesSection />
+          </section>
+
+          {/* Categories */}
+          <section className="w-full">
+            <CategoriesSection categories={categoriesDisplay} />
+          </section>
+
+          {/* Trust Signals */}
+          <section className="w-full">
+            <TrustSection signals={homeContent.trustSignals} />
+          </section>
+
+          {/* Testimonials */}
+          <section className="w-full">
+            <TestimonialsSection testimonials={homeContent.testimonials} />
+          </section>
         </div>
-        <Link
-          href="/games"
-          className="group flex items-center gap-2 rounded-2xl border border-white/20 bg-white/5 px-6 py-3 text-sm font-bold text-white backdrop-blur-sm transition-all hover:bg-white/10 hover:border-white/40"
-        >
-          <span>مرور همه</span>
-          <svg
-            className="h-4 w-4 transition-transform group-hover:translate-x-1"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M9 5l7 7-7 7"
-            />
-          </svg>
-        </Link>
-      </div>
+      </main>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 w-full">
-        {games.slice(0, 3).map((game) => (
-          <Link
-            key={game.id}
-            href={`/games/${game.slug}`}
-            className="group relative overflow-hidden rounded-[36px] border-2 border-white/10 bg-gradient-to-br from-slate-800/90 to-slate-900/90 backdrop-blur-sm shadow-2xl transition-all duration-500 hover:scale-105 hover:border-emerald-500/50 hover:shadow-[0_0_40px_rgba(16,185,129,0.3)]"
-          >
-            {/* Image Section */}
-            <div className="relative h-64 w-full overflow-hidden">
-              <div className="absolute inset-0 bg-gradient-to-t from-slate-900 via-slate-900/50 to-transparent z-10" />
-              <Image
-                src={
-                  game.coverUrl ||
-                  "https://images.igdb.com/igdb/image/upload/t_cover_big/nocover.webp"
-                }
-                alt={game.title}
-                fill
-                sizes="(max-width: 768px) 100vw, 33vw"
-                className="object-cover transition-transform duration-700 group-hover:scale-110"
-              />
-
-              {/* Badges */}
-              <div className="absolute left-4 top-4 z-20 flex gap-2">
-                <span className="rounded-full bg-slate-900/90 backdrop-blur-sm px-3 py-1.5 text-xs font-black text-white border border-white/10">
-                  {game.platform}
-                </span>
-                <span className="rounded-full bg-white/90 backdrop-blur-sm px-3 py-1.5 text-xs font-black text-slate-900">
-                  {game.regionOptions[0] || "R2"}
-                </span>
-              </div>
-
-              {game.safeAccountAvailable && (
-                <span className="absolute right-4 top-4 z-20 rounded-full bg-gradient-to-r from-emerald-500 to-emerald-600 px-4 py-1.5 text-xs font-black text-white shadow-lg">
-                  SAFE
-                </span>
-              )}
-            </div>
-
-            {/* Content Section */}
-            <div className="relative z-10 p-6 text-white">
-              <h3 className="text-2xl font-black text-white mb-2 line-clamp-1">
-                {game.title}
-              </h3>
-              <p className="text-sm text-slate-400 mb-4 line-clamp-2">
-                {game.description}
-              </p>
-
-              {/* Price */}
-              <div className="mb-4 rounded-2xl bg-gradient-to-r from-emerald-500/20 to-blue-500/20 border border-white/10 p-4">
-                <div className="flex items-baseline gap-2">
-                  <span className="text-3xl font-black text-white">
-                    {formatToman(game.basePrice)}
-                  </span>
-                  <span className="text-sm font-medium text-slate-300">
-                    تومان
-                  </span>
-                </div>
-              </div>
-
-              {/* Tags */}
-              <div className="flex flex-wrap gap-2 mb-4">
-                {game.genre.slice(0, 2).map((genre) => (
-                  <span
-                    key={genre}
-                    className="rounded-full bg-white/10 backdrop-blur-sm px-3 py-1 text-xs font-semibold text-slate-300 border border-white/10"
-                  >
-                    {genre}
-                  </span>
-                ))}
-              </div>
-
-              {/* CTA Button */}
-              <div className="rounded-2xl bg-gradient-to-r from-emerald-500 to-emerald-600 p-4 text-center text-sm font-black text-white transition-all duration-300 group-hover:from-emerald-400 group-hover:to-emerald-500">
-                مشاهده و خرید
-              </div>
-            </div>
-
-            {/* Hover Glow */}
-            <div className="absolute -inset-1 rounded-[36px] bg-gradient-to-r from-emerald-500/0 via-emerald-500/30 to-emerald-500/0 opacity-0 blur-xl transition-opacity duration-500 group-hover:opacity-100" />
-          </Link>
-        ))}
-      </div>
-    </section>
+      <SiteFooter />
+    </>
   );
-};
+}

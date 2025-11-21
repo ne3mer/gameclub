@@ -1,4 +1,4 @@
-import { Schema, model, type Document } from 'mongoose';
+import { Schema, model, type Document, type Types } from 'mongoose';
 
 export interface GameDocument extends Document {
   title: string;
@@ -13,6 +13,32 @@ export interface GameDocument extends Document {
   coverUrl?: string;
   gallery?: string[]; // Additional product images
   tags: string[];
+  categories?: Types.ObjectId[]; // Reference to Category model
+  
+  // New media fields
+  trailerUrl?: string;
+  gameplayVideoUrl?: string;
+  screenshots?: string[];
+  
+  // Enhanced metadata
+  rating?: number;
+  releaseDate?: Date;
+  developer?: string;
+  publisher?: string;
+  ageRating?: string;
+  features?: string[];
+  systemRequirements?: {
+    minimum?: string;
+    recommended?: string;
+  };
+  
+  // SEO & Marketing
+  metaTitle?: string;
+  metaDescription?: string;
+  featured?: boolean;
+  onSale?: boolean;
+  salePrice?: number;
+
   options: {
     id: string;
     name: string;
@@ -42,6 +68,7 @@ const gameSchema = new Schema<GameDocument>(
     coverUrl: { type: String },
     gallery: [{ type: String }],
     tags: [{ type: String }],
+    categories: [{ type: Schema.Types.ObjectId, ref: 'Category' }],
     // New media fields
     trailerUrl: { type: String },
     gameplayVideoUrl: { type: String },

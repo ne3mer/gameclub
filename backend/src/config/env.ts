@@ -22,6 +22,7 @@ const envSchema = z.object({
       { message: 'ADMIN_API_KEY must be at least 16 characters in production' }
     )
     .optional(),
+  ADMIN_NOTIFICATION_EMAILS: z.string().optional(),
   TELEGRAM_BOT_TOKEN: z.string().optional(),
   TELEGRAM_CHAT_ID: z.string().optional(),
   SMTP_HOST: z.string().optional(),

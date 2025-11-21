@@ -6,6 +6,7 @@ import {
   type FulfillmentStatus,
 } from "../models/order.model";
 import { CartModel } from "../models/cart.model";
+import { notifyAdminsOfEvent } from "./adminNotification.service";
 
 interface CreateOrderInput {
   userId?: string;
@@ -59,6 +60,13 @@ export const createOrder = async (
 
   const order = await OrderModel.create(orderData);
 
+  let orderItemsSummary = input.items.map((item) => ({
+    title: "بازی ناشناس",
+    quantity: item.quantity,
+    price: item.pricePaid,
+  }));
+  let resolvedCustomerName = order.customerInfo.name;
+
   // Clear user's cart after order creation
   if (input.userId) {
     await CartModel.findOneAndUpdate(
@@ -80,10 +88,13 @@ export const createOrder = async (
     if (input.userId) {
       const user = await UserModel.findById(input.userId);
       userTelegram = user?.telegram;
+      if (!resolvedCustomerName && user?.name) {
+        resolvedCustomerName = user.name;
+      }
     }
 
     // Get game titles for items
-    const itemsWithTitles = await Promise.all(
+    orderItemsSummary = await Promise.all(
       input.items.map(async (item) => {
         const game = await GameModel.findById(item.gameId);
         return {
@@ -101,12 +112,30 @@ export const createOrder = async (
       input.customerInfo.email,
       userTelegram,
       input.totalAmount,
-      itemsWithTitles
+      orderItemsSummary
     );
   } catch (error) {
     console.error("Failed to send order confirmation notification:", error);
     // Don't fail the order if notification fails
   }
+
+  notifyAdminsOfEvent({
+    type: "order_created",
+    orderId: order._id.toString(),
+    orderNumber: order.orderNumber,
+    totalAmount: order.totalAmount,
+    paymentStatus: order.paymentStatus,
+    fulfillmentStatus: order.fulfillmentStatus,
+    customer: {
+      name: resolvedCustomerName,
+      email: order.customerInfo.email,
+      phone: order.customerInfo.phone,
+    },
+    createdAt: order.createdAt,
+    items: orderItemsSummary,
+  }).catch((error) => {
+    console.error("Failed to notify admins about new order:", error);
+  });
 
   return order;
 };

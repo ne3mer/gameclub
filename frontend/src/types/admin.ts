@@ -33,6 +33,7 @@ export type ProductRow = {
   featured?: boolean;
   onSale?: boolean;
   salePrice?: number;
+  categories?: string[];
   options: {
     id: string;
     name: string;
@@ -77,6 +78,7 @@ export type NewProductState = {
   featured: boolean;
   onSale: boolean;
   salePrice: string;
+  categories: string[];
   options: {
     id: string;
     name: string;
@@ -102,6 +104,7 @@ export const initialNewProduct: NewProductState = {
   coverUrl: '',
   gallery: [],
   tags: 'حماسی,Safe',
+  categories: [],
   // Media fields
   trailerUrl: '',
   gameplayVideoUrl: '',
@@ -165,6 +168,7 @@ export type HomeHeroContent = {
   primaryCta: { label: string; href: string };
   secondaryCta: { label: string; href: string };
   stats: { id: string; label: string; value: string }[];
+  image?: string;
 };
 
 export type HomeSpotlight = {
@@ -193,6 +197,7 @@ export type HomeTestimonial = {
 
 export type HomeContentState = {
   hero: HomeHeroContent;
+  heroSlides: HomeHeroContent[];
   spotlights: HomeSpotlight[];
   trustSignals: HomeTrustSignal[];
   testimonials: HomeTestimonial[];

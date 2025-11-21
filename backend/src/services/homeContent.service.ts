@@ -11,6 +11,7 @@ export const getOrCreateHomeContent = async () => {
 
 export interface HomeContentUpdatePayload {
   hero?: HomeContentDocument['hero'];
+  heroSlides?: HomeContentDocument['heroSlides'];
   spotlights?: HomeContentDocument['spotlights'];
   trustSignals?: HomeContentDocument['trustSignals'];
   testimonials?: HomeContentDocument['testimonials'];
@@ -22,16 +23,19 @@ export const updateHomeContent = async (payload: HomeContentUpdatePayload) => {
     content = new HomeContentModel(defaultHomeContent);
   }
 
-  if (payload.hero) {
+  if (payload.hero !== undefined) {
     content.hero = payload.hero;
   }
-  if (payload.spotlights) {
+  if (payload.heroSlides !== undefined) {
+    content.heroSlides = payload.heroSlides;
+  }
+  if (payload.spotlights !== undefined) {
     content.spotlights = payload.spotlights;
   }
-  if (payload.trustSignals) {
+  if (payload.trustSignals !== undefined) {
     content.trustSignals = payload.trustSignals;
   }
-  if (payload.testimonials) {
+  if (payload.testimonials !== undefined) {
     content.testimonials = payload.testimonials;
   }
 

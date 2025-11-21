@@ -664,6 +664,7 @@ export function BannerBuilder({ banner, onClose, onSave }: BannerBuilderProps) {
                       src={background.imageUrl}
                       alt="Preview"
                       fill
+                      sizes="(max-width: 1024px) 100vw, 50vw"
                       className="object-cover"
                     />
                     {background.overlay && (
@@ -696,7 +697,13 @@ export function BannerBuilder({ banner, onClose, onSave }: BannerBuilderProps) {
                       if (element.type === 'image' && element.imageUrl) {
                         return (
                           <div key={index} className="relative h-32 w-32">
-                            <Image src={element.imageUrl} alt="" fill className="object-contain" />
+                            <Image
+                              src={element.imageUrl}
+                              alt=""
+                              fill
+                              sizes="128px"
+                              className="object-contain"
+                            />
                           </div>
                         );
                       }
@@ -750,4 +757,3 @@ export function BannerBuilder({ banner, onClose, onSave }: BannerBuilderProps) {
     </div>
   );
 }
-

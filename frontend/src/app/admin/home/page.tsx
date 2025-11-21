@@ -9,16 +9,54 @@ const emptyMessage = 'برای ذخیره تغییرات، NEXT_PUBLIC_ADMIN_API
 
 const fallback = (value: string | undefined, def: string) => (value && value.trim().length ? value : def);
 
-const sanitizeHomeContent = (payload: HomeContentState): HomeContentState => {
-  const heroStats = payload.hero.stats
+const sanitizeHeroBlock = (hero: HomeContentState['hero'], defaults: HomeContentState['hero']): HomeContentState['hero'] => {
+  const statSource = hero.stats && hero.stats.length ? hero.stats : defaults.stats;
+  const stats = statSource
     .map((stat, index) => ({
-      id: stat.id || crypto.randomUUID(),
-      label: fallback(stat.label, `آمار ${index + 1}`),
-      value: fallback(stat.value, '---')
+      id: stat.id || defaults.stats[index]?.id || crypto.randomUUID(),
+      label: fallback(stat.label, defaults.stats[index]?.label ?? `آمار ${index + 1}`),
+      value: fallback(stat.value, defaults.stats[index]?.value ?? '---')
     }))
     .filter((stat) => stat.label && stat.value);
 
-  const stats = heroStats.length ? heroStats : defaultHomeContent.hero.stats;
+  const normalizedStats = stats.length ? stats : defaults.stats;
+
+  const normalized: HomeContentState['hero'] = {
+    badge: fallback(hero.badge, defaults.badge),
+    title: fallback(hero.title, defaults.title),
+    subtitle: fallback(hero.subtitle, defaults.subtitle),
+    primaryCta: {
+      label: fallback(hero.primaryCta?.label, defaults.primaryCta.label),
+      href: fallback(hero.primaryCta?.href, defaults.primaryCta.href)
+    },
+    secondaryCta: {
+      label: fallback(hero.secondaryCta?.label, defaults.secondaryCta.label),
+      href: fallback(hero.secondaryCta?.href, defaults.secondaryCta.href)
+    },
+    stats: normalizedStats
+  };
+
+  const imageCandidate = hero.image && hero.image.trim().length ? hero.image : defaults.image;
+  if (imageCandidate && imageCandidate.trim().length) {
+    normalized.image = imageCandidate;
+  }
+
+  return normalized;
+};
+
+const sanitizeHeroSlides = (slides: HomeContentState['heroSlides']): HomeContentState['heroSlides'] => {
+  const fallbackSlides =
+    defaultHomeContent.heroSlides && defaultHomeContent.heroSlides.length
+      ? defaultHomeContent.heroSlides
+      : [defaultHomeContent.hero];
+  const fallbackBase = fallbackSlides[0] ?? defaultHomeContent.hero;
+  const sourceSlides = slides.length ? slides : fallbackSlides;
+
+  return sourceSlides.map((slide, index) => sanitizeHeroBlock(slide, fallbackSlides[index] ?? fallbackBase));
+};
+
+const sanitizeHomeContent = (payload: HomeContentState): HomeContentState => {
+  const hero = sanitizeHeroBlock(payload.hero, defaultHomeContent.hero);
 
   const spotlights = payload.spotlights
     .map((spotlight, index) => ({
@@ -49,23 +87,26 @@ const sanitizeHomeContent = (payload: HomeContentState): HomeContentState => {
   }));
 
   return {
-    hero: {
-      badge: fallback(payload.hero.badge, defaultHomeContent.hero.badge),
-      title: fallback(payload.hero.title, defaultHomeContent.hero.title),
-      subtitle: fallback(payload.hero.subtitle, defaultHomeContent.hero.subtitle),
-      primaryCta: {
-        label: fallback(payload.hero.primaryCta.label, defaultHomeContent.hero.primaryCta.label),
-        href: fallback(payload.hero.primaryCta.href, defaultHomeContent.hero.primaryCta.href)
-      },
-      secondaryCta: {
-        label: fallback(payload.hero.secondaryCta.label, defaultHomeContent.hero.secondaryCta.label),
-        href: fallback(payload.hero.secondaryCta.href, defaultHomeContent.hero.secondaryCta.href)
-      },
-      stats
-    },
+    hero,
+    heroSlides: sanitizeHeroSlides(payload.heroSlides),
     spotlights: spotlights.length ? spotlights : defaultHomeContent.spotlights,
     trustSignals: trustSignals.length ? trustSignals : defaultHomeContent.trustSignals,
     testimonials: testimonials.length ? testimonials : defaultHomeContent.testimonials
+  };
+};
+
+const normalizeHomeContent = (settings?: Partial<HomeContentState>): HomeContentState => {
+  const fallbackSlides =
+    defaultHomeContent.heroSlides && defaultHomeContent.heroSlides.length
+      ? defaultHomeContent.heroSlides
+      : [defaultHomeContent.hero];
+
+  return {
+    hero: settings?.hero ?? defaultHomeContent.hero,
+    heroSlides: settings?.heroSlides?.length ? settings.heroSlides : fallbackSlides,
+    spotlights: settings?.spotlights?.length ? settings.spotlights : defaultHomeContent.spotlights,
+    trustSignals: settings?.trustSignals?.length ? settings.trustSignals : defaultHomeContent.trustSignals,
+    testimonials: settings?.testimonials?.length ? settings.testimonials : defaultHomeContent.testimonials
   };
 };
 
@@ -84,17 +125,18 @@ export default function AdminHomePage() {
           throw new Error('دریافت تنظیمات صفحه با خطا مواجه شد.');
         }
         const payload = await response.json();
-        const settings = payload?.data?.settings;
-        setContent(settings ?? defaultHomeContent);
+        const settings = payload?.data?.settings as Partial<HomeContentState> | undefined;
+        setContent(normalizeHomeContent(settings));
       } catch (error) {
         console.error(error);
-        setContent(defaultHomeContent);
+        setContent(normalizeHomeContent());
       } finally {
         setLoading(false);
       }
     };
 
     fetchHomeContent();
+
   }, []);
 
   const updateSection = <K extends keyof HomeContentState>(section: K, value: HomeContentState[K]) => {
@@ -128,6 +170,76 @@ export default function AdminHomePage() {
     updateSection('hero', { ...content.hero, stats });
   };
 
+  const updateHeroSlide = (index: number, payload: Partial<HomeContentState['heroSlides'][number]>) => {
+    if (!content) return;
+    const heroSlides = [...content.heroSlides];
+    heroSlides[index] = { ...heroSlides[index], ...payload };
+    updateSection('heroSlides', heroSlides);
+  };
+
+  const updateHeroSlideCta = (
+    index: number,
+    cta: 'primaryCta' | 'secondaryCta',
+    field: 'label' | 'href',
+    value: string
+  ) => {
+    if (!content) return;
+    const heroSlides = [...content.heroSlides];
+    heroSlides[index] = {
+      ...heroSlides[index],
+      [cta]: {
+        ...heroSlides[index][cta],
+        [field]: value
+      }
+    };
+    updateSection('heroSlides', heroSlides);
+  };
+
+  const updateHeroSlideStat = (slideIndex: number, statIndex: number, field: 'label' | 'value', value: string) => {
+    if (!content) return;
+    const heroSlides = [...content.heroSlides];
+    const stats = [...heroSlides[slideIndex].stats];
+    stats[statIndex] = { ...stats[statIndex], [field]: value };
+    heroSlides[slideIndex] = { ...heroSlides[slideIndex], stats };
+    updateSection('heroSlides', heroSlides);
+  };
+
+  const addHeroSlideStat = (slideIndex: number) => {
+    if (!content) return;
+    const heroSlides = [...content.heroSlides];
+    const stats = [...heroSlides[slideIndex].stats, { id: crypto.randomUUID(), label: 'آمار جدید', value: '---' }];
+    heroSlides[slideIndex] = { ...heroSlides[slideIndex], stats };
+    updateSection('heroSlides', heroSlides);
+  };
+
+  const removeHeroSlideStat = (slideIndex: number, statIndex: number) => {
+    if (!content) return;
+    const heroSlides = [...content.heroSlides];
+    const stats = heroSlides[slideIndex].stats.filter((_, i) => i !== statIndex);
+    heroSlides[slideIndex] = { ...heroSlides[slideIndex], stats };
+    updateSection('heroSlides', heroSlides);
+  };
+
+  const addHeroSlide = () => {
+    if (!content) return;
+    const newSlide: HomeContentState['heroSlides'][number] = {
+      badge: 'اسلاید جدید',
+      title: 'تیتر اسلاید',
+      subtitle: 'توضیح کوتاه برای این اسلاید',
+      primaryCta: { label: 'CTA اصلی', href: '/games' },
+      secondaryCta: { label: 'CTA ثانویه', href: '/games' },
+      image: '',
+      stats: [{ id: crypto.randomUUID(), label: 'آمار ۱', value: '---' }]
+    };
+    updateSection('heroSlides', [...content.heroSlides, newSlide]);
+  };
+
+  const removeHeroSlide = (index: number) => {
+    if (!content) return;
+    const heroSlides = content.heroSlides.filter((_, i) => i !== index);
+    updateSection('heroSlides', heroSlides);
+  };
+
   const updateArrayItem = <K extends 'spotlights' | 'trustSignals' | 'testimonials'>(
     section: K,
     index: number,
@@ -136,7 +248,7 @@ export default function AdminHomePage() {
     if (!content) return;
     const next = [...content[section]];
     next[index] = { ...next[index], ...payload } as (typeof next)[number];
-    updateSection(section, next);
+    updateSection(section, next as HomeContentState[K]);
   };
 
   const addArrayItem = <K extends 'spotlights' | 'trustSignals' | 'testimonials'>(
@@ -145,13 +257,13 @@ export default function AdminHomePage() {
   ) => {
     if (!content) return;
     const next = [...content[section], template];
-    updateSection(section, next);
+    updateSection(section, next as HomeContentState[K]);
   };
 
   const removeArrayItem = <K extends 'spotlights' | 'trustSignals' | 'testimonials'>(section: K, index: number) => {
     if (!content) return;
     const next = content[section].filter((_, i) => i !== index);
-    updateSection(section, next);
+    updateSection(section, next as HomeContentState[K]);
   };
 
   const handleSave = async () => {
@@ -188,6 +300,7 @@ export default function AdminHomePage() {
       </div>
     );
   }
+
 
   return (
     <div className="space-y-6">
@@ -369,6 +482,122 @@ export default function AdminHomePage() {
         </div>
       </section>
 
+
+      <section className="rounded-3xl border border-slate-100 bg-white p-6 shadow-sm">
+        <SectionHeader
+          title="کاروسل صفحه اصلی"
+          description="اسلایدهای Hero Carousel را مطابق کمپین‌های خود تنظیم کنید."
+          onAdd={addHeroSlide}
+        />
+        <div className="space-y-4 text-sm">
+          {content.heroSlides.map((slide, index) => (
+            <div key={`${slide.title}-${index}`} className="rounded-2xl border border-slate-100 p-4">
+              <div className="mb-3 flex items-center justify-between text-xs text-slate-500">
+                <span>اسلاید #{index + 1}</span>
+                <button type="button" className="text-rose-500" onClick={() => removeHeroSlide(index)}>
+                  حذف
+                </button>
+              </div>
+              <div className="grid gap-4 md:grid-cols-2">
+                <label className="block text-xs font-semibold text-slate-500">
+                  برچسب
+                  <input
+                    value={slide.badge}
+                    onChange={(e) => updateHeroSlide(index, { badge: e.target.value })}
+                    className="mt-2 w-full rounded-2xl border border-slate-200 px-4 py-2"
+                  />
+                </label>
+                <label className="block text-xs font-semibold text-slate-500">
+                  آدرس تصویر (URL)
+                  <input
+                    value={slide.image ?? ''}
+                    onChange={(e) => updateHeroSlide(index, { image: e.target.value })}
+                    className="mt-2 w-full rounded-2xl border border-slate-200 px-4 py-2"
+                  />
+                </label>
+              </div>
+              <label className="mt-3 block">
+                عنوان
+                <input
+                  value={slide.title}
+                  onChange={(e) => updateHeroSlide(index, { title: e.target.value })}
+                  className="mt-2 w-full rounded-2xl border border-slate-200 px-4 py-3"
+                />
+              </label>
+              <label className="mt-3 block">
+                توضیح
+                <textarea
+                  value={slide.subtitle}
+                  onChange={(e) => updateHeroSlide(index, { subtitle: e.target.value })}
+                  className="mt-2 w-full rounded-2xl border border-slate-200 px-4 py-3"
+                  rows={3}
+                />
+              </label>
+              <div className="mt-3 grid gap-4 md:grid-cols-2">
+                <label className="block">
+                  CTA اصلی
+                  <input
+                    value={slide.primaryCta.label}
+                    onChange={(e) => updateHeroSlideCta(index, 'primaryCta', 'label', e.target.value)}
+                    className="mt-2 w-full rounded-2xl border border-slate-200 px-4 py-2"
+                  />
+                  <input
+                    value={slide.primaryCta.href}
+                    onChange={(e) => updateHeroSlideCta(index, 'primaryCta', 'href', e.target.value)}
+                    className="mt-2 w-full rounded-2xl border border-slate-200 px-4 py-2"
+                  />
+                </label>
+                <label className="block">
+                  CTA ثانویه
+                  <input
+                    value={slide.secondaryCta.label}
+                    onChange={(e) => updateHeroSlideCta(index, 'secondaryCta', 'label', e.target.value)}
+                    className="mt-2 w-full rounded-2xl border border-slate-200 px-4 py-2"
+                  />
+                  <input
+                    value={slide.secondaryCta.href}
+                    onChange={(e) => updateHeroSlideCta(index, 'secondaryCta', 'href', e.target.value)}
+                    className="mt-2 w-full rounded-2xl border border-slate-200 px-4 py-2"
+                  />
+                </label>
+              </div>
+              <div className="mt-4 space-y-3 rounded-2xl border border-slate-100 bg-slate-50/70 p-4">
+                <div className="flex items-center justify-between text-xs font-semibold text-slate-500">
+                  <span>آمار نمایش داده‌شده</span>
+                  <button type="button" className="text-emerald-600" onClick={() => addHeroSlideStat(index)}>
+                    + افزودن
+                  </button>
+                </div>
+                {slide.stats.map((stat, statIndex) => (
+                  <div key={stat.id} className="grid gap-2 rounded-xl bg-white p-3 text-xs">
+                    <div className="flex items-center justify-between text-slate-500">
+                      <span>بلاک #{statIndex + 1}</span>
+                      <button
+                        type="button"
+                        className="text-rose-500"
+                        onClick={() => removeHeroSlideStat(index, statIndex)}
+                      >
+                        حذف
+                      </button>
+                    </div>
+                    <input
+                      value={stat.label}
+                      onChange={(e) => updateHeroSlideStat(index, statIndex, 'label', e.target.value)}
+                      className="rounded-xl border border-slate-200 px-3 py-2"
+                    />
+                    <input
+                      value={stat.value}
+                      onChange={(e) => updateHeroSlideStat(index, statIndex, 'value', e.target.value)}
+                      className="rounded-xl border border-slate-200 px-3 py-2"
+                    />
+                  </div>
+                ))}
+              </div>
+            </div>
+          ))}
+        </div>
+      </section>
+
       <section className="grid gap-6 lg:grid-cols-2">
         <ContentListEditor
           title="دلایل اعتماد"
@@ -416,8 +645,8 @@ export default function AdminHomePage() {
             <label className="flex items-center gap-2 text-xs text-slate-500">
               <input
                 type="checkbox"
-                checked={item.highlight ?? false}
-                onChange={(e) => updateArrayItem('testimonials', index, { highlight: e.target.checked })}
+                checked={(item.highlight as boolean | undefined) ?? false}
+                onChange={(e) => updateArrayItem('testimonials', index, { highlight: e.target.checked } as Partial<HomeContentState['testimonials'][number]>)}
               />
               نمایش به‌صورت Highlight
             </label>

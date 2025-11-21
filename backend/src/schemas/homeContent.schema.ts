@@ -17,7 +17,11 @@ const heroSchema = z.object({
       label: z.string().min(1),
       value: z.string().min(1)
     })
-  )
+  ),
+  image: z
+    .string()
+    .min(1)
+    .optional()
 });
 
 const spotlightSchema = z.object({
@@ -56,6 +60,7 @@ export const updateHomeContentSchema = z.object({
   body: z
     .object({
       hero: heroSchema.optional(),
+      heroSlides: z.array(heroSchema).optional(),
       spotlights: z.array(spotlightSchema).optional(),
       trustSignals: z.array(trustSchema).optional(),
       testimonials: z.array(testimonialSchema).optional()

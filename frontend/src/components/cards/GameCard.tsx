@@ -47,140 +47,127 @@ export const GameCard = ({ game }: Props) => {
       onClick={handleCardClick}
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
-      className="group relative flex w-full h-full cursor-pointer flex-col overflow-hidden rounded-[32px] bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 shadow-2xl transition-all duration-500 hover:scale-105 hover:shadow-[0_0_40px_rgba(16,185,129,0.4)]"
+      className="group relative flex h-full w-full cursor-pointer flex-col overflow-hidden rounded-[32px] border border-[#e5e5ea] bg-white shadow-[0_28px_90px_rgba(17,23,41,0.08)] transition-all duration-500 hover:-translate-y-1 hover:shadow-[0_38px_120px_rgba(17,23,41,0.12)]"
     >
-        {/* Animated Background Glow */}
-        <div className="absolute inset-0 opacity-0 transition-opacity duration-500 group-hover:opacity-100">
-          <div className="absolute -right-20 -top-20 h-64 w-64 rounded-full bg-emerald-500/30 blur-3xl animate-pulse" />
-          <div className="absolute -left-20 -bottom-20 h-64 w-64 rounded-full bg-blue-500/30 blur-3xl animate-pulse delay-300" />
+      <div className="pointer-events-none absolute inset-0 opacity-0 transition-opacity duration-500 group-hover:opacity-100">
+        <div className="absolute -right-20 -top-20 h-56 w-56 rounded-full bg-[#dfe3ec] blur-[90px]" />
+        <div className="absolute -left-24 -bottom-16 h-56 w-56 rounded-full bg-white blur-[90px]" />
+      </div>
+
+      <div className="relative h-64 w-full overflow-hidden bg-slate-100">
+        <div className="absolute inset-0 bg-gradient-to-t from-slate-900/35 via-transparent to-transparent z-10" />
+        <Image
+          src={game.cover}
+          alt={game.title}
+          fill
+          sizes="(max-width: 768px) 300px, 360px"
+          className={`object-cover transition-transform duration-700 ${isHovered ? 'scale-110' : 'scale-100'}`}
+        />
+
+        <div className="absolute left-3 top-3 z-20 flex gap-2">
+          <span className="rounded-full border border-white/60 bg-white px-3 py-1.5 text-xs font-bold text-slate-900 shadow-sm">
+            {game.platform}
+          </span>
+          <span className="rounded-full border border-white bg-white px-3 py-1.5 text-xs font-bold text-slate-900 shadow-sm">
+            {game.region}
+          </span>
         </div>
 
-        {/* Game Cover Image */}
-        <div className="relative h-64 w-full overflow-hidden">
-          <div className="absolute inset-0 bg-gradient-to-t from-slate-900 via-slate-900/50 to-transparent z-10" />
-          <Image
-            src={game.cover}
-            alt={game.title}
-            fill
-            sizes="(max-width: 768px) 300px, 360px"
-            className={`object-cover transition-transform duration-700 ${isHovered ? 'scale-110' : 'scale-100'}`}
-          />
-          
-          {/* Platform & Region Badges */}
-          <div className="absolute left-3 top-3 z-20 flex gap-2">
-            <span className="rounded-full bg-slate-900/90 backdrop-blur-sm px-3 py-1.5 text-xs font-bold text-white shadow-lg border border-white/10">
-              {game.platform}
-            </span>
-            <span className="rounded-full bg-white/90 backdrop-blur-sm px-3 py-1.5 text-xs font-bold text-slate-900 shadow-lg">
-              {game.region}
+        {game.safe && (
+          <div className="absolute right-3 top-3 z-20">
+            <span className="relative rounded-full bg-gradient-to-r from-rose-400 to-orange-400 px-4 py-1.5 text-xs font-black text-white shadow-lg">
+              <span className="absolute inset-0 rounded-full bg-orange-200 animate-ping opacity-40" />
+              <span className="relative">SAFE</span>
             </span>
           </div>
+        )}
 
-          {/* Safe Account Badge */}
-          {game.safe && (
-            <div className="absolute right-3 top-3 z-20">
-              <span className="relative rounded-full bg-gradient-to-r from-emerald-500 to-emerald-600 px-4 py-1.5 text-xs font-black text-white shadow-lg">
-                <span className="absolute inset-0 rounded-full bg-emerald-400 animate-ping opacity-75" />
-                <span className="relative">SAFE</span>
-              </span>
-            </div>
-          )}
+        {displayRating > 0 && (
+          <div className="absolute bottom-3 left-3 z-20 flex items-center gap-1 rounded-full border border-white/70 bg-white/90 px-3 py-1.5 shadow-sm">
+            <Icon name="star" size={14} className="text-amber-400" strokeWidth={0} />
+            <span className="text-xs font-bold text-slate-800">{displayRating.toFixed(1)}</span>
+          </div>
+        )}
+      </div>
 
-          {/* Rating Stars */}
+        <div className="relative z-10 flex flex-1 flex-col p-6 text-slate-900">
+        <div className="mb-3">
+          <h3 className="mb-1 text-xl font-black leading-tight line-clamp-1">{game.title}</h3>
           {displayRating > 0 && (
-            <div className="absolute bottom-3 left-3 z-20 flex items-center gap-1 rounded-full bg-slate-900/80 backdrop-blur-sm px-3 py-1.5">
-              <Icon name="star" size={14} className="text-yellow-400 fill-yellow-400" strokeWidth={0} />
-              <span className="text-xs font-bold text-white">{displayRating.toFixed(1)}</span>
-            </div>
+            <p className="text-xs text-slate-500">
+              امتیاز کاربران: {displayRating.toFixed(1)} ⭐
+              {reviewCount > 0 && ` (${reviewCount} نظر)`}
+            </p>
           )}
         </div>
 
-        {/* Content Section */}
-        <div className="relative z-10 flex flex-1 flex-col p-5 text-white">
-          {/* Title & Category */}
-          <div className="mb-3">
-            <h3 className="text-xl font-black text-white mb-1 line-clamp-1">{game.title}</h3>
-            {displayRating > 0 && (
-              <p className="text-xs text-slate-400">
-                امتیاز کاربران: {displayRating.toFixed(1)} ⭐
-                {reviewCount > 0 && ` (${reviewCount} نظر)`}
-              </p>
-            )}
+        <div className="mb-4 rounded-2xl border border-orange-100 bg-gradient-to-r from-[#fff0e1] to-[#ffe9f5] p-4">
+          <div className="flex items-baseline gap-2">
+            <span className="text-3xl font-black text-slate-900">{formatToman(game.price)}</span>
+            <span className="text-sm font-medium text-slate-500">تومان</span>
           </div>
-
-          {/* Price Section */}
-          <div className="mb-4 rounded-2xl bg-gradient-to-r from-emerald-500/20 to-blue-500/20 backdrop-blur-sm border border-white/10 p-4">
-            <div className="flex items-baseline gap-2">
-              <span className="text-3xl font-black text-white">
-                {formatToman(game.price)}
-              </span>
-              <span className="text-sm font-medium text-slate-300">تومان</span>
-            </div>
-            {game.monthlyPrice && (
-              <p className="text-xs text-slate-400 mt-1">
-                عضویت GameClub: {formatToman(game.monthlyPrice)} تومان / ماه
-              </p>
-            )}
-          </div>
-
-          {/* Features Tags */}
-          <div className="mb-4 flex flex-wrap gap-2">
-            <span className={`flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-semibold ${
-              game.safe 
-                ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30' 
-                : 'bg-slate-700/50 text-slate-300 border border-slate-600/30'
-            }`}>
-              <Icon name={game.safe ? 'shield' : 'zap'} size={12} strokeWidth={2.5} />
-              {game.safe ? 'ضد بن' : 'استاندارد'}
-            </span>
-            <span className="flex items-center gap-1.5 rounded-full bg-blue-500/20 text-blue-300 border border-blue-500/30 px-3 py-1 text-xs font-semibold">
-              <Icon name="zap" size={12} strokeWidth={2.5} />
-              تحویل فوری
-            </span>
-            <span className="flex items-center gap-1.5 rounded-full bg-purple-500/20 text-purple-300 border border-purple-500/30 px-3 py-1 text-xs font-semibold">
-              <Icon name="message" size={12} strokeWidth={2.5} />
-              پشتیبانی آنلاین
-            </span>
-          </div>
-
-          {/* Action Buttons */}
-          <div className="mt-auto flex items-center gap-3">
-            <button
-              onClick={(e) => {
-                e.preventDefault();
-                e.stopPropagation();
-                handleAddToCart(e);
-              }}
-              disabled={loading}
-              className="group/btn flex-1 rounded-2xl bg-gradient-to-r from-emerald-500 to-emerald-600 py-3.5 text-sm font-black text-white shadow-lg transition-all duration-300 hover:from-emerald-400 hover:to-emerald-500 hover:shadow-emerald-500/50 hover:scale-105 disabled:opacity-70 disabled:cursor-not-allowed"
-            >
-              {loading ? (
-                <span className="flex items-center justify-center gap-2">
-                  <span className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
-                  در حال افزودن...
-                </span>
-              ) : (
-                <span className="flex items-center justify-center gap-2">
-                  <Icon name="cart" size={16} className="text-white" />
-                  افزودن به سبد
-                </span>
-              )}
-            </button>
-            <button
-              onClick={(e) => {
-                e.preventDefault();
-                e.stopPropagation();
-                router.push(`/games/${slug}`);
-              }}
-              className="rounded-2xl border-2 border-white/20 bg-white/10 backdrop-blur-sm px-5 py-3.5 text-sm font-bold text-white transition-all duration-300 hover:bg-white/20 hover:border-white/40"
-            >
-              جزئیات
-            </button>
-          </div>
+          {game.monthlyPrice && (
+            <p className="mt-1 text-xs text-slate-500">عضویت GameClub: {formatToman(game.monthlyPrice)} تومان / ماه</p>
+          )}
         </div>
 
-        {/* Hover Effect Border */}
-        <div className="absolute inset-0 rounded-[32px] border-2 border-transparent transition-all duration-500 group-hover:border-emerald-500/50 pointer-events-none" />
-      </article>
+        <div className="mb-4 flex flex-wrap gap-2">
+          <span
+            className={`flex items-center gap-1.5 rounded-full border px-3 py-1 text-xs font-semibold ${
+              game.safe
+                ? 'border-[#d1f5dc] bg-[#f1fef4] text-[#1f8a4a]'
+                : 'border-slate-200 bg-slate-50 text-slate-600'
+            }`}
+          >
+            <Icon name={game.safe ? 'shield' : 'zap'} size={12} strokeWidth={2.5} />
+            {game.safe ? 'ضد بن' : 'استاندارد'}
+          </span>
+          <span className="flex items-center gap-1.5 rounded-full border border-[#dce9ff] bg-[#f3f7ff] px-3 py-1 text-xs font-semibold text-[#0a84ff]">
+            <Icon name="zap" size={12} strokeWidth={2.5} />
+            تحویل فوری
+          </span>
+          <span className="flex items-center gap-1.5 rounded-full border border-purple-200 bg-purple-50 px-3 py-1 text-xs font-semibold text-purple-600">
+            <Icon name="message" size={12} strokeWidth={2.5} />
+            پشتیبانی آنلاین
+          </span>
+        </div>
+
+        <div className="mt-auto flex items-center gap-3">
+          <button
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              handleAddToCart(e);
+            }}
+            disabled={loading}
+            className="flex-1 rounded-2xl bg-[#0a84ff] py-3.5 text-sm font-black text-white shadow-lg transition-all duration-300 hover:bg-[#0071e3] disabled:cursor-not-allowed disabled:opacity-60"
+          >
+            {loading ? (
+              <span className="flex items-center justify-center gap-2">
+                <span className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
+                در حال افزودن...
+              </span>
+            ) : (
+              <span className="flex items-center justify-center gap-2">
+                <Icon name="cart" size={16} className="text-white" />
+                افزودن به سبد
+              </span>
+            )}
+          </button>
+          <button
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              router.push(`/games/${slug}`);
+            }}
+            className="rounded-2xl border border-[#d1d1d6] bg-white px-5 py-3.5 text-sm font-bold text-slate-700 transition-all duration-300 hover:border-[#0a84ff]/40 hover:text-[#0a84ff]"
+          >
+            جزئیات
+          </button>
+        </div>
+      </div>
+
+      <div className="pointer-events-none absolute inset-0 rounded-[32px] border border-transparent transition-colors duration-500 group-hover:border-[#0a84ff]/30" />
+    </article>
   );
 };

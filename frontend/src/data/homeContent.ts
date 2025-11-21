@@ -11,6 +11,7 @@ export type HeroContent = {
   primaryCta: { label: string; href: string };
   secondaryCta: { label: string; href: string };
   stats: HeroStat[];
+  image?: string; // Added image
 };
 
 export type Spotlight = {
@@ -39,6 +40,7 @@ export type Testimonial = {
 
 export type HomeContent = {
   hero: HeroContent;
+  heroSlides?: HeroContent[]; // Added heroSlides
   spotlights: Spotlight[];
   trustSignals: TrustSignal[];
   testimonials: Testimonial[];
@@ -58,6 +60,44 @@ export const defaultHomeContent: HomeContent = {
       { id: 'mode', label: 'حالت اکانت', value: 'Safe & استاندارد' }
     ]
   },
+  heroSlides: [
+    {
+      badge: 'ویژه پلی‌استیشن ۵',
+      title: 'God of War Ragnarök',
+      subtitle: 'حماسه نورس را با کیفیت 4K و نرخ فریم بالا تجربه کنید. اکانت قانونی و گارانتی مادام‌العمر.',
+      primaryCta: { label: 'خرید اکانت قانونی', href: '/games/god-of-war-ragnarok' },
+      secondaryCta: { label: 'مشاهده تریلر', href: '#' },
+      image: 'https://images.igdb.com/igdb/image/upload/t_1080p/co5s5v.jpg',
+      stats: [
+        { id: 'metacritic', label: 'Metacritic', value: '94' },
+        { id: 'delivery', label: 'تحویل', value: 'آنی' },
+      ]
+    },
+    {
+      badge: 'پرفروش‌ترین هفته',
+      title: 'EA Sports FC 25',
+      subtitle: 'هیجان فوتبال واقعی را با دوستان خود تجربه کنید. بهترین قیمت در ایران.',
+      primaryCta: { label: 'خرید بازی', href: '/games/ea-sports-fc-25' },
+      secondaryCta: { label: 'اطلاعات بیشتر', href: '#' },
+      image: 'https://images.igdb.com/igdb/image/upload/t_1080p/co89cq.jpg',
+      stats: [
+        { id: 'players', label: 'بازیکنان', value: '۱۰M+' },
+        { id: 'price', label: 'شروع از', value: '۱.۲۰۰' },
+      ]
+    },
+    {
+      badge: 'پیشنهاد ویژه',
+      title: 'Spider-Man 2',
+      subtitle: 'در نقش پیتر پارکر و مایلز مورالز، نیویورک را از چنگال ونوم نجات دهید.',
+      primaryCta: { label: 'خرید با تخفیف', href: '/games/marvels-spider-man-2' },
+      secondaryCta: { label: 'نقد و بررسی', href: '#' },
+      image: 'https://images.igdb.com/igdb/image/upload/t_1080p/co670h.jpg',
+      stats: [
+        { id: 'rating', label: 'امتیاز کاربران', value: '۴.۹/۵' },
+        { id: 'genre', label: 'ژانر', value: 'اکشن' },
+      ]
+    }
+  ],
   spotlights: [
     {
       id: 'cta-1',

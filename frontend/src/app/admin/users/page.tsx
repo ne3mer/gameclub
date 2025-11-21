@@ -86,13 +86,13 @@ export default function UsersPage() {
             return { ...user, ...stats };
           });
 
-          setUsers(usersWithStats.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()));
+          setUsers(usersWithStats.sort((a: User, b: User) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()));
         } else {
-          setUsers(usersList.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()));
+          setUsers(usersList.sort((a: User, b: User) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()));
         }
       } catch (err) {
         // If orders fetch fails, just use users without stats
-        setUsers(usersList.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()));
+        setUsers(usersList.sort((a: User, b: User) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()));
       }
     } catch (err) {
       setError(err instanceof Error ? err.message : 'خطا در بارگذاری کاربران');

@@ -5,6 +5,7 @@ import { useCallback, useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { API_BASE_URL, ADMIN_API_KEY, adminHeaders } from '@/lib/api';
 import { ImageUpload } from '@/components/upload/ImageUpload';
+import CategorySelector from '@/components/admin/products/CategorySelector';
 import type { NewProductState, ProductRow } from '@/types/admin';
 import { Icon } from '@/components/icons/Icon';
 
@@ -78,6 +79,7 @@ export default function EditProductPage() {
         coverUrl: product.coverUrl ?? '',
         gallery: product.gallery ?? [],
         tags: product.tags?.join(', ') ?? '',
+        categories: product.categories ?? [],
         trailerUrl: product.trailerUrl ?? '',
         gameplayVideoUrl: product.gameplayVideoUrl ?? '',
         screenshots: product.screenshots?.join(', ') ?? '',
@@ -257,6 +259,7 @@ export default function EditProductPage() {
       coverUrl: formState.coverUrl || undefined,
       gallery: formState.gallery,
       tags: parseList(formState.tags),
+      categories: formState.categories,
       options: formState.options,
       variants: formState.variants
     };
@@ -602,6 +605,13 @@ export default function EditProductPage() {
                   onChange={(value) => handleFieldChange('detailedDescription', value)} 
                 />
                 <p className="mt-2 text-xs text-slate-500">می‌توانید از تصاویر، لینک‌ها و فرمت‌های مختلف استفاده کنید</p>
+              </div>
+
+              <div className="md:col-span-2">
+                <CategorySelector
+                  selectedCategories={formState.categories || []}
+                  onChange={(categories) => handleFieldChange('categories', categories as any)}
+                />
               </div>
 
               <label className="flex items-center gap-3 p-4 rounded-xl border border-slate-200 bg-slate-50">

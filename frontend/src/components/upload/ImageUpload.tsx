@@ -2,7 +2,7 @@
 
 import { useState, useRef, useEffect } from 'react';
 import Image from 'next/image';
-import { API_BASE_URL, adminHeaders } from '@/lib/api';
+import { API_BASE_URL, adminHeaders, resolveImageUrl } from '@/lib/api';
 
 interface ImageUploadProps {
   currentImage?: string;
@@ -18,7 +18,7 @@ export function ImageUpload({ currentImage, onImageUploaded, label = 'تصویر
 
   // Sync preview with currentImage prop
   useEffect(() => {
-    setPreview(currentImage || '');
+    setPreview(currentImage ? resolveImageUrl(currentImage) : '');
   }, [currentImage]);
 
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -55,7 +55,7 @@ export function ImageUpload({ currentImage, onImageUploaded, label = 'تصویر
       }
 
       const data = await response.json();
-      const imageUrl = `${API_BASE_URL}${data.data.url}`;
+      const imageUrl = resolveImageUrl(data.data?.url);
       
       setPreview(imageUrl);
       onImageUploaded(imageUrl);

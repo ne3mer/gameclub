@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation';
 import { API_BASE_URL, adminHeaders, ADMIN_API_KEY } from '@/lib/api';
 import { NewProductState, initialNewProduct } from '@/types/admin';
 import { ImageUpload } from '@/components/upload/ImageUpload';
+import CategorySelector from '@/components/admin/products/CategorySelector';
 import { Icon } from '@/components/icons/Icon';
 
 const RichTextEditor = dynamic(
@@ -152,6 +153,7 @@ export default function NewProductPage() {
       coverUrl: newProduct.coverUrl || undefined,
       gallery: newProduct.gallery,
       tags: parseList(newProduct.tags),
+      categories: newProduct.categories,
       options: newProduct.options,
       variants: newProduct.variants
     };
@@ -407,6 +409,13 @@ export default function NewProductPage() {
                   onChange={setDetailedDescription} 
                 />
                 <p className="mt-2 text-xs text-slate-500">می‌توانید از تصاویر، لینک‌ها و فرمت‌های مختلف استفاده کنید</p>
+              </div>
+
+              <div className="md:col-span-2">
+                <CategorySelector
+                  selectedCategories={newProduct.categories}
+                  onChange={(categories) => handleNewProductChange('categories', categories as any)}
+                />
               </div>
 
               <label className="flex items-center gap-3 p-4 rounded-xl border border-slate-200 bg-slate-50">
