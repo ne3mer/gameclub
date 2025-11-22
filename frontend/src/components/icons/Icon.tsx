@@ -61,7 +61,8 @@ import {
   ArrowLeft,
   Layers,
   Globe,
-  Info
+  Info,
+  Truck
 } from 'lucide-react';
 import { type LucideIcon } from 'lucide-react';
 
@@ -126,7 +127,8 @@ type IconName =
   | 'arrow-left'
   | 'layers'
   | 'globe'
-  | 'info';
+  | 'info'
+  | 'truck';
 
 const iconMap: Record<IconName, LucideIcon> = {
   dashboard: LayoutDashboard,
@@ -189,7 +191,8 @@ const iconMap: Record<IconName, LucideIcon> = {
   'arrow-left': ArrowLeft,
   layers: Layers,
   globe: Globe,
-  info: Info
+  info: Info,
+  truck: Truck
 };
 
 interface IconProps {

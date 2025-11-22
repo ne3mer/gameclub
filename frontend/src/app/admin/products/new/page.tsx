@@ -8,6 +8,9 @@ import { NewProductState, initialNewProduct } from '@/types/admin';
 import { ImageUpload } from '@/components/upload/ImageUpload';
 import CategorySelector from '@/components/admin/products/CategorySelector';
 import { Icon } from '@/components/icons/Icon';
+import { ProductTypeSelector } from '@/components/admin/ProductTypeSelector';
+import { DynamicField } from '@/components/admin/DynamicField';
+import { PRODUCT_TEMPLATES, getProductTemplate } from '@/config/productTemplates';
 
 const RichTextEditor = dynamic(
   () => import('@/components/editor/RichTextEditor').then((mod) => ({ default: mod.RichTextEditor })),
@@ -34,6 +37,23 @@ export default function NewProductPage() {
   const [loading, setLoading] = useState(false);
   const [statusMessage, setStatusMessage] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
   const [activeTab, setActiveTab] = useState<TabType>('basic');
+
+  // Multi-product state
+  const [productType, setProductType] = useState('digital_game');
+  const [customFields, setCustomFields] = useState<Record<string, any>>({});
+  const [inventory, setInventory] = useState({
+    trackInventory: false,
+    quantity: 0,
+    lowStockThreshold: 5,
+    sku: ''
+  });
+  const [shipping, setShipping] = useState({
+    requiresShipping: false,
+    weight: 0,
+    dimensions: { length: 0, width: 0, height: 0 },
+    shippingCost: 0,
+    freeShippingThreshold: 0
+  });
 
   const handleNewProductChange = (field: keyof NewProductState, value: string | boolean) => {
     setNewProduct((prev) => ({ ...prev, [field]: value }));
@@ -118,6 +138,28 @@ export default function NewProductPage() {
     }));
   };
 
+  // Multi-product helpers
+  const template = getProductTemplate(productType);
+
+  const handleCustomFieldChange = (name: string, value: any) => {
+    setCustomFields((prev) => ({ ...prev, [name]: value }));
+  };
+
+  const handleInventoryChange = (field: string, value: any) => {
+    setInventory((prev) => ({ ...prev, [field]: value }));
+  };
+
+  const handleShippingChange = (field: string, value: any) => {
+    if (field === 'length' || field === 'width' || field === 'height') {
+      setShipping((prev) => ({
+        ...prev,
+        dimensions: { ...prev.dimensions, [field]: value }
+      }));
+    } else {
+      setShipping((prev) => ({ ...prev, [field]: value }));
+    }
+  };
+
   const handleCreateNewProduct = async (event: React.FormEvent) => {
     event.preventDefault();
     if (!ADMIN_API_KEY) {
@@ -155,7 +197,13 @@ export default function NewProductPage() {
       tags: parseList(newProduct.tags),
       categories: newProduct.categories,
       options: newProduct.options,
-      variants: newProduct.variants
+      variants: newProduct.variants,
+      
+      // Multi-product fields
+      productType,
+      customFields,
+      inventory: inventory.trackInventory ? inventory : undefined,
+      shipping: shipping.requiresShipping ? shipping : undefined
     };
 
     // Media fields
@@ -295,8 +343,14 @@ export default function NewProductPage() {
       <form onSubmit={handleCreateNewProduct} className="space-y-6">
         {/* Basic Info Tab */}
         {activeTab === 'basic' && (
-          <div className="grid gap-6 rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
-            <h2 className="text-xl font-bold text-slate-900 border-b border-slate-100 pb-3">اطلاعات پایه محصول</h2>
+          <div className="space-y-6">
+            {/* Product Type Selector */}
+            <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
+              <ProductTypeSelector value={productType} onChange={setProductType} />
+            </div>
+
+            <div className="grid gap-6 rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
+              <h2 className="text-xl font-bold text-slate-900 border-b border-slate-100 pb-3">اطلاعات پایه محصول</h2>
             
             <div className="grid gap-6 md:grid-cols-2">
               <label className="md:col-span-2">
@@ -384,6 +438,151 @@ export default function NewProductPage() {
                 />
               </label>
 
+              {/* Dynamic Fields */}
+              {template?.fields.length ? (
+                <div className="md:col-span-2 space-y-4 rounded-2xl bg-slate-50 p-6 border border-slate-200">
+                  <h3 className="font-bold text-slate-900 flex items-center gap-2">
+                    <span className="text-xl">{template.icon}</span>
+                    مشخصات {template.name}
+                  </h3>
+                  <div className="grid gap-6 md:grid-cols-2">
+                    {template.fields.map((field) => (
+                      <div key={field.name} className={field.type === 'textarea' ? 'md:col-span-2' : ''}>
+                        <DynamicField
+                          field={field}
+                          value={customFields[field.name]}
+                          onChange={(value) => handleCustomFieldChange(field.name, value)}
+                        />
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              ) : null}
+
+              {/* Inventory Section */}
+              {template?.inventory.trackInventory && (
+                <div className="md:col-span-2 space-y-4 rounded-2xl bg-blue-50 p-6 border border-blue-100">
+                  <h3 className="font-bold text-blue-900 flex items-center gap-2">
+                    <Icon name="package" size={20} />
+                    مدیریت موجودی
+                  </h3>
+                  <div className="grid gap-6 md:grid-cols-2">
+                    <label className="flex items-center gap-3">
+                      <input
+                        type="checkbox"
+                        checked={inventory.trackInventory}
+                        onChange={(e) => handleInventoryChange('trackInventory', e.target.checked)}
+                        className="h-5 w-5 rounded border-blue-300 accent-blue-600"
+                      />
+                      <span className="text-sm font-bold text-blue-800">فعال‌سازی مدیریت موجودی</span>
+                    </label>
+                    {inventory.trackInventory && (
+                      <>
+                        <label>
+                          <span className="text-sm font-bold text-blue-800 mb-2 block">تعداد موجودی</span>
+                          <input
+                            type="number"
+                            value={inventory.quantity}
+                            onChange={(e) => handleInventoryChange('quantity', Number(e.target.value))}
+                            className="w-full rounded-xl border border-blue-200 px-4 py-2 text-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 transition"
+                          />
+                        </label>
+                        <label>
+                          <span className="text-sm font-bold text-blue-800 mb-2 block">حداقل موجودی (هشدار)</span>
+                          <input
+                            type="number"
+                            value={inventory.lowStockThreshold}
+                            onChange={(e) => handleInventoryChange('lowStockThreshold', Number(e.target.value))}
+                            className="w-full rounded-xl border border-blue-200 px-4 py-2 text-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 transition"
+                          />
+                        </label>
+                        <label>
+                          <span className="text-sm font-bold text-blue-800 mb-2 block">کد محصول (SKU)</span>
+                          <input
+                            type="text"
+                            value={inventory.sku}
+                            onChange={(e) => handleInventoryChange('sku', e.target.value)}
+                            className="w-full rounded-xl border border-blue-200 px-4 py-2 text-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 transition"
+                          />
+                        </label>
+                      </>
+                    )}
+                  </div>
+                </div>
+              )}
+
+              {/* Shipping Section */}
+              {template?.shipping.requiresShipping && (
+                <div className="md:col-span-2 space-y-4 rounded-2xl bg-orange-50 p-6 border border-orange-100">
+                  <h3 className="font-bold text-orange-900 flex items-center gap-2">
+                    <Icon name="truck" size={20} />
+                    تنظیمات ارسال
+                  </h3>
+                  <div className="grid gap-6 md:grid-cols-2">
+                    <label className="flex items-center gap-3 md:col-span-2">
+                      <input
+                        type="checkbox"
+                        checked={shipping.requiresShipping}
+                        onChange={(e) => handleShippingChange('requiresShipping', e.target.checked)}
+                        className="h-5 w-5 rounded border-orange-300 accent-orange-600"
+                      />
+                      <span className="text-sm font-bold text-orange-800">این محصول نیاز به ارسال فیزیکی دارد</span>
+                    </label>
+                    {shipping.requiresShipping && (
+                      <>
+                        <label>
+                          <span className="text-sm font-bold text-orange-800 mb-2 block">وزن (گرم)</span>
+                          <input
+                            type="number"
+                            value={shipping.weight}
+                            onChange={(e) => handleShippingChange('weight', Number(e.target.value))}
+                            className="w-full rounded-xl border border-orange-200 px-4 py-2 text-sm focus:border-orange-500 focus:ring-2 focus:ring-orange-500/20 transition"
+                          />
+                        </label>
+                        <label>
+                          <span className="text-sm font-bold text-orange-800 mb-2 block">هزینه ارسال ثابت (تومان)</span>
+                          <input
+                            type="number"
+                            value={shipping.shippingCost}
+                            onChange={(e) => handleShippingChange('shippingCost', Number(e.target.value))}
+                            className="w-full rounded-xl border border-orange-200 px-4 py-2 text-sm focus:border-orange-500 focus:ring-2 focus:ring-orange-500/20 transition"
+                          />
+                        </label>
+                        <div className="md:col-span-2 grid grid-cols-3 gap-4">
+                          <label>
+                            <span className="text-sm font-bold text-orange-800 mb-2 block">طول (cm)</span>
+                            <input
+                              type="number"
+                              value={shipping.dimensions.length}
+                              onChange={(e) => handleShippingChange('length', Number(e.target.value))}
+                              className="w-full rounded-xl border border-orange-200 px-4 py-2 text-sm focus:border-orange-500 focus:ring-2 focus:ring-orange-500/20 transition"
+                            />
+                          </label>
+                          <label>
+                            <span className="text-sm font-bold text-orange-800 mb-2 block">عرض (cm)</span>
+                            <input
+                              type="number"
+                              value={shipping.dimensions.width}
+                              onChange={(e) => handleShippingChange('width', Number(e.target.value))}
+                              className="w-full rounded-xl border border-orange-200 px-4 py-2 text-sm focus:border-orange-500 focus:ring-2 focus:ring-orange-500/20 transition"
+                            />
+                          </label>
+                          <label>
+                            <span className="text-sm font-bold text-orange-800 mb-2 block">ارتفاع (cm)</span>
+                            <input
+                              type="number"
+                              value={shipping.dimensions.height}
+                              onChange={(e) => handleShippingChange('height', Number(e.target.value))}
+                              className="w-full rounded-xl border border-orange-200 px-4 py-2 text-sm focus:border-orange-500 focus:ring-2 focus:ring-orange-500/20 transition"
+                            />
+                          </label>
+                        </div>
+                      </>
+                    )}
+                  </div>
+                </div>
+              )}
+
               <label className="md:col-span-2">
                 <span className="text-sm font-bold text-slate-700 mb-2 block">تگ‌ها (با کاما)</span>
                 <input
@@ -431,6 +630,7 @@ export default function NewProductPage() {
                 </div>
               </label>
             </div>
+          </div>
           </div>
         )}
 
