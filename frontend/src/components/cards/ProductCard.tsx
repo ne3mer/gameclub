@@ -5,15 +5,15 @@ import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { useCart } from '@/contexts/CartContext';
 import { formatToman } from '@/lib/format';
-import type { GameCardContent } from '@/data/home';
+import type { ProductCardContent } from '@/data/home';
 import { Icon } from '@/components/icons/Icon';
 import { useGameRating } from '@/hooks/useGameRating';
 
 interface Props {
-  game: GameCardContent;
+  game: ProductCardContent;
 }
 
-export const GameCard = ({ game }: Props) => {
+export const ProductCard = ({ game }: Props) => {
   const { addToCart } = useCart();
   const router = useRouter();
   const [loading, setLoading] = useState(false);
@@ -42,6 +42,28 @@ export const GameCard = ({ game }: Props) => {
     }
   };
 
+  // Helper to get product type icon and label
+  const getProductTypeInfo = (type?: string) => {
+    switch (type) {
+      case 'physical_product':
+      case 'action_figure':
+        return { icon: 'package', label: 'فیزیکی', color: 'bg-purple-50 text-purple-600 border-purple-200' };
+      case 'gaming_gear':
+        return { icon: 'headset', label: 'تجهیزات', color: 'bg-indigo-50 text-indigo-600 border-indigo-200' };
+      case 'digital_content':
+        return { icon: 'book', label: 'محتوا', color: 'bg-cyan-50 text-cyan-600 border-cyan-200' };
+      case 'collectible':
+      case 'collectible_card':
+        return { icon: 'gem', label: 'کلکسیونی', color: 'bg-amber-50 text-amber-600 border-amber-200' };
+      case 'apparel':
+        return { icon: 'shirt', label: 'لباس', color: 'bg-pink-50 text-pink-600 border-pink-200' };
+      default:
+        return null; // Digital game doesn't need a special badge here
+    }
+  };
+
+  const typeInfo = getProductTypeInfo(game.productType);
+
   return (
     <article
       onClick={handleCardClick}
@@ -65,12 +87,22 @@ export const GameCard = ({ game }: Props) => {
         />
 
         <div className="absolute left-3 top-3 z-20 flex gap-2">
-          <span className="rounded-full border border-white/60 bg-white px-3 py-1.5 text-xs font-bold text-slate-900 shadow-sm">
-            {game.platform}
-          </span>
-          <span className="rounded-full border border-white bg-white px-3 py-1.5 text-xs font-bold text-slate-900 shadow-sm">
-            {game.region}
-          </span>
+          {game.platform && (
+            <span className="rounded-full border border-white/60 bg-white px-3 py-1.5 text-xs font-bold text-slate-900 shadow-sm">
+              {game.platform}
+            </span>
+          )}
+          {game.region && (
+            <span className="rounded-full border border-white bg-white px-3 py-1.5 text-xs font-bold text-slate-900 shadow-sm">
+              {game.region}
+            </span>
+          )}
+          {typeInfo && (
+            <span className={`rounded-full border px-3 py-1.5 text-xs font-bold shadow-sm flex items-center gap-1 ${typeInfo.color}`}>
+              <Icon name={typeInfo.icon as any} size={12} />
+              {typeInfo.label}
+            </span>
+          )}
         </div>
 
         {game.safe && (
@@ -112,16 +144,39 @@ export const GameCard = ({ game }: Props) => {
         </div>
 
         <div className="mb-4 flex flex-wrap gap-2">
-          <span
-            className={`flex items-center gap-1.5 rounded-full border px-3 py-1 text-xs font-semibold ${
-              game.safe
-                ? 'border-[#d1f5dc] bg-[#f1fef4] text-[#1f8a4a]'
-                : 'border-slate-200 bg-slate-50 text-slate-600'
-            }`}
-          >
-            <Icon name={game.safe ? 'shield' : 'zap'} size={12} strokeWidth={2.5} />
-            {game.safe ? 'ضد بن' : 'استاندارد'}
-          </span>
+          {game.safe !== undefined && (
+            <span
+              className={`flex items-center gap-1.5 rounded-full border px-3 py-1 text-xs font-semibold ${
+                game.safe
+                  ? 'border-[#d1f5dc] bg-[#f1fef4] text-[#1f8a4a]'
+                  : 'border-slate-200 bg-slate-50 text-slate-600'
+              }`}
+            >
+              <Icon name={game.safe ? 'shield' : 'zap'} size={12} strokeWidth={2.5} />
+              {game.safe ? 'ضد بن' : 'استاندارد'}
+            </span>
+          )}
+          
+          {/* Inventory Status */}
+          {game.inventory && game.inventory.status !== 'in_stock' && (
+            <span className={`flex items-center gap-1.5 rounded-full border px-3 py-1 text-xs font-semibold ${
+              game.inventory.status === 'out_of_stock' 
+                ? 'border-rose-200 bg-rose-50 text-rose-600'
+                : 'border-amber-200 bg-amber-50 text-amber-600'
+            }`}>
+              <Icon name="alert" size={12} strokeWidth={2.5} />
+              {game.inventory.status === 'out_of_stock' ? 'ناموجود' : 'موجودی کم'}
+            </span>
+          )}
+
+          {/* Shipping Info */}
+          {game.shipping?.freeShipping && (
+            <span className="flex items-center gap-1.5 rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1 text-xs font-semibold text-emerald-600">
+              <Icon name="truck" size={12} strokeWidth={2.5} />
+              ارسال رایگان
+            </span>
+          )}
+
           <span className="flex items-center gap-1.5 rounded-full border border-[#dce9ff] bg-[#f3f7ff] px-3 py-1 text-xs font-semibold text-[#0a84ff]">
             <Icon name="zap" size={12} strokeWidth={2.5} />
             تحویل فوری
@@ -139,7 +194,7 @@ export const GameCard = ({ game }: Props) => {
               e.stopPropagation();
               handleAddToCart(e);
             }}
-            disabled={loading}
+            disabled={loading || (game.inventory?.status === 'out_of_stock')}
             className="flex-1 rounded-2xl bg-[#0a84ff] py-3.5 text-sm font-black text-white shadow-lg transition-all duration-300 hover:bg-[#0071e3] disabled:cursor-not-allowed disabled:opacity-60"
           >
             {loading ? (
@@ -150,7 +205,7 @@ export const GameCard = ({ game }: Props) => {
             ) : (
               <span className="flex items-center justify-center gap-2">
                 <Icon name="cart" size={16} className="text-white" />
-                افزودن به سبد
+                {game.inventory?.status === 'out_of_stock' ? 'ناموجود' : 'افزودن به سبد'}
               </span>
             )}
           </button>

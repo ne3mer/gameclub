@@ -1,18 +1,31 @@
-export type GameCardContent = {
+export type ProductCardContent = {
   id: string;
   slug?: string;
   title: string;
-  platform: string;
+  platform?: string;
   price: number;
-  region: string;
-  safe: boolean;
-  monthlyPrice: number;
+  region?: string;
+  safe?: boolean;
+  monthlyPrice?: number;
   category: string;
   rating: number;
   cover: string;
   description?: string;
   tags?: string[];
+  
+  // Multi-product fields
+  productType?: 'digital_game' | 'physical_product' | 'digital_content' | 'gaming_gear' | 'collectible' | 'bundle';
+  inventory?: {
+    status: 'in_stock' | 'low_stock' | 'out_of_stock';
+    quantity: number;
+  };
+  shipping?: {
+    requiresShipping: boolean;
+    freeShipping: boolean;
+  };
 };
+
+export type GameCardContent = ProductCardContent; // Alias for backward compatibility
 
 export const popularGames: GameCardContent[] = [
   {

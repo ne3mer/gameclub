@@ -19,7 +19,7 @@ export const CatalogGameCard = ({ game }: Props) => {
   const tags =
     (game.tags && game.tags.length > 0
       ? game.tags
-      : [game.safe ? 'Safe Account' : 'Standard', `ریجن ${game.region}`, game.platform]).slice(0, 3);
+      : [game.safe ? 'Safe Account' : 'Standard', `ریجن ${game.region || 'Global'}`, game.platform || 'PC']).slice(0, 3);
 
   return (
     <article className="group flex h-full w-full flex-col rounded-[32px] border border-[#e5e5ea] bg-white/95 p-5 shadow-[0_15px_50px_rgba(15,23,42,0.08)] transition-all hover:-translate-y-1 hover:border-[#0a84ff]/20 hover:shadow-[0_30px_90px_rgba(15,23,42,0.15)]">
@@ -33,8 +33,8 @@ export const CatalogGameCard = ({ game }: Props) => {
           className="object-cover transition duration-700 group-hover:scale-110"
         />
         <div className="absolute left-4 top-4 z-20 flex gap-2 text-xs font-bold">
-          <InfoChip icon="🎮" label={game.platform} />
-          <InfoChip icon="🌍" label={game.region} />
+          <InfoChip icon="🎮" label={game.platform || 'PC'} />
+          <InfoChip icon="🌍" label={game.region || 'Global'} />
         </div>
         {game.safe && (
           <span className="absolute right-4 top-4 z-20 rounded-full bg-gradient-to-r from-[#34c759] to-[#30d158] px-4 py-1 text-xs font-black text-white shadow-lg">
@@ -74,7 +74,7 @@ export const CatalogGameCard = ({ game }: Props) => {
             <span className="text-3xl font-black text-slate-900">{formatToman(game.price)}</span>
             <span className="text-sm font-medium text-slate-500">تومان</span>
           </div>
-          {game.monthlyPrice > 0 && (
+          {game.monthlyPrice && game.monthlyPrice > 0 && (
             <p className="text-xs text-slate-500">
               پرداخت ماهانه GameClub: {formatToman(game.monthlyPrice)} تومان
             </p>

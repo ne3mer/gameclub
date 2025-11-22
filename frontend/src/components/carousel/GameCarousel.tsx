@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
-import { GameCard } from '@/components/cards/GameCard';
+import { ProductCard } from '@/components/cards/ProductCard';
 import type { GameCardContent } from '@/data/home';
 import { Icon } from '@/components/icons/Icon';
 
@@ -130,7 +130,7 @@ export function GameCarousel({
               key={game.id}
               className="flex-shrink-0 w-[280px] sm:w-[320px] md:w-[360px] lg:w-[380px] xl:w-[400px]"
             >
-              <GameCard game={game} />
+              <ProductCard game={game} />
             </div>
           ))}
         </div>

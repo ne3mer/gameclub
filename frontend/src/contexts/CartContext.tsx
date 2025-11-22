@@ -10,6 +10,11 @@ type CartItem = {
     slug: string;
     coverUrl?: string;
     basePrice: number;
+    shipping?: {
+      requiresShipping: boolean;
+      shippingCost?: number;
+      freeShipping?: boolean;
+    };
   };
   quantity: number;
   priceAtAdd: number;
@@ -31,7 +36,10 @@ type CartContextType = {
   loading: boolean;
   error: string;
   itemCount: number;
+  itemCount: number;
   totalPrice: number;
+  shippingCost: number;
+  finalTotal: number;
   addToCart: (gameId: string, quantity?: number, variantId?: string, selectedOptions?: Record<string, string>) => Promise<void>;
   updateQuantity: (gameId: string, quantity: number) => Promise<void>;
   removeFromCart: (gameId: string) => Promise<void>;
@@ -267,6 +275,15 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
 
   const itemCount = cart?.items.reduce((sum, item) => sum + item.quantity, 0) || 0;
   const totalPrice = cart?.items.reduce((sum, item) => sum + item.priceAtAdd * item.quantity, 0) || 0;
+  
+  const shippingCost = cart?.items.reduce((sum, item) => {
+    if (item.gameId.shipping?.requiresShipping && !item.gameId.shipping.freeShipping) {
+      return sum + (item.gameId.shipping.shippingCost || 0) * item.quantity;
+    }
+    return sum;
+  }, 0) || 0;
+
+  const finalTotal = totalPrice + shippingCost;
 
   const value: CartContextType = {
     cart,
@@ -274,6 +291,8 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
     error,
     itemCount,
     totalPrice,
+    shippingCost,
+    finalTotal,
     addToCart,
     updateQuantity,
     removeFromCart,

@@ -3,7 +3,7 @@ import { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 import { API_BASE_URL } from '@/lib/api';
 import { Icon } from '@/components/icons/Icon';
-import { GameCard } from '@/components/cards/GameCard';
+import { ProductCard } from '@/components/cards/ProductCard';
 import type { GameCardContent } from '@/data/home';
 
 interface Props {
@@ -226,7 +226,7 @@ export default async function CategoryPage({ params, searchParams }: Props) {
         {mappedGames.length > 0 ? (
           <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
             {mappedGames.map((game) => (
-              <GameCard key={game.id} game={game} />
+              <ProductCard key={game.id} game={game} />
             ))}
           </div>
         ) : (

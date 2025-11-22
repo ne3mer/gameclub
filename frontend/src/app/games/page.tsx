@@ -21,6 +21,7 @@ type BackendGame = {
   basePrice: number;
   safeAccountAvailable: boolean;
   coverUrl?: string;
+  productType?: string;
 };
 
 const mapGame = (game: BackendGame): GameCardContent => ({
@@ -36,7 +37,8 @@ const mapGame = (game: BackendGame): GameCardContent => ({
   rating: 0,
   cover: game.coverUrl ?? 'https://images.igdb.com/igdb/image/upload/t_cover_big/nocover.webp',
   description: game.description ?? '',
-  tags: game.genre?.slice(0, 3) ?? []
+  tags: game.genre?.slice(0, 3) ?? [],
+  productType: game.productType as any
 });
 
 const PER_PAGE = 12;
@@ -101,8 +103,8 @@ function GamesContent() {
       result = result.filter((game) => {
         return (
           game.title.toLowerCase().includes(normalized) ||
-          game.region.toLowerCase().includes(normalized) ||
-          game.platform.toLowerCase().includes(normalized) ||
+          (game.region && game.region.toLowerCase().includes(normalized)) ||
+          (game.platform && game.platform.toLowerCase().includes(normalized)) ||
           game.category.toLowerCase().includes(normalized)
         );
       });
@@ -112,7 +114,7 @@ function GamesContent() {
     const platforms = params?.get('platforms')?.split(',').filter(Boolean) || [];
     if (platforms.length > 0) {
       result = result.filter((game) => 
-        platforms.some(p => game.platform.toLowerCase().includes(p.toLowerCase()))
+        game.platform && platforms.some(p => game.platform!.toLowerCase().includes(p.toLowerCase()))
       );
     }
     
@@ -128,7 +130,7 @@ function GamesContent() {
     const regions = params?.get('regions')?.split(',').filter(Boolean) || [];
     if (regions.length > 0) {
       result = result.filter((game) => 
-        regions.some(r => game.region.toLowerCase().includes(r.toLowerCase()))
+        game.region && regions.some(r => game.region!.toLowerCase().includes(r.toLowerCase()))
       );
     }
     

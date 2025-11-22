@@ -3,13 +3,35 @@
 import Image from 'next/image';
 import Link from 'next/link';
 import { Icon } from '@/components/icons/Icon';
-import type { GameCardContent } from '@/data/home';
+import type { ProductCardContent } from '@/data/home';
 
 interface MinimalGameCardProps {
-  game: GameCardContent;
+  game: ProductCardContent;
 }
 
 export function MinimalGameCard({ game }: MinimalGameCardProps) {
+  // Helper to get product type icon and label
+  const getProductTypeInfo = (type?: string) => {
+    switch (type) {
+      case 'physical_product':
+      case 'action_figure':
+        return { label: 'فیزیکی', color: 'bg-purple-500/90' };
+      case 'gaming_gear':
+        return { label: 'تجهیزات', color: 'bg-indigo-500/90' };
+      case 'digital_content':
+        return { label: 'محتوا', color: 'bg-cyan-500/90' };
+      case 'collectible':
+      case 'collectible_card':
+        return { label: 'کلکسیونی', color: 'bg-amber-500/90' };
+      case 'apparel':
+        return { label: 'لباس', color: 'bg-pink-500/90' };
+      default:
+        return null;
+    }
+  };
+
+  const typeInfo = getProductTypeInfo(game.productType);
+
   return (
     <Link href={`/games/${game.slug}`} className="group block relative">
       {/* Image Container */}
@@ -27,13 +49,18 @@ export function MinimalGameCard({ game }: MinimalGameCardProps) {
 
         {/* Floating Badges */}
         <div className="absolute top-3 left-3 flex flex-col gap-2">
+          {typeInfo && (
+            <span className={`inline-flex h-5 md:h-6 items-center rounded-full px-2 md:px-2.5 text-[9px] md:text-[10px] font-bold uppercase tracking-wide text-white backdrop-blur-md shadow-sm ${typeInfo.color}`}>
+              {typeInfo.label}
+            </span>
+          )}
           {game.safe && (
             <span className="inline-flex h-5 md:h-6 items-center rounded-full bg-emerald-500/90 px-2 md:px-2.5 text-[9px] md:text-[10px] font-bold uppercase tracking-wide text-white backdrop-blur-md shadow-sm">
               Safe
             </span>
           )}
           <span className="inline-flex h-5 md:h-6 items-center rounded-full bg-white/90 px-2 md:px-2.5 text-[9px] md:text-[10px] font-bold uppercase tracking-wide text-slate-900 backdrop-blur-md shadow-sm">
-            {game.region}
+            {game.region || 'Global'}
           </span>
         </div>
 

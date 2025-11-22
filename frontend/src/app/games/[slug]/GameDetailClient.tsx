@@ -58,6 +58,29 @@ export type BackendGame = {
     price: number;
     stock: number;
   }[];
+  // Multi-product fields
+  productType?: string;
+  customFields?: Record<string, any>;
+  inventory?: {
+    trackInventory: boolean;
+    quantity: number;
+    reserved: number;
+    lowStockThreshold: number;
+    sku?: string;
+    status: 'in_stock' | 'low_stock' | 'out_of_stock';
+  };
+  shipping?: {
+    requiresShipping: boolean;
+    weight?: number;
+    dimensions?: {
+      length: number;
+      width: number;
+      height: number;
+    };
+    shippingCost?: number;
+    freeShippingThreshold?: number;
+    freeShipping?: boolean;
+  };
 };
 
 // Helper function to extract YouTube/Vimeo video ID
@@ -366,7 +389,45 @@ export default function GameDetailClient({ initialGame }: GameDetailClientProps)
                   </div>
                 )}
 
-                {currentVariant && currentVariant.stock <= 5 && currentVariant.stock > 0 && (
+                {/* Inventory Status */}
+                {game.inventory?.trackInventory && (
+                  <div className={`mb-4 rounded-xl border p-3 ${
+                    game.inventory.status === 'out_of_stock' ? 'bg-rose-50 border-rose-200' :
+                    game.inventory.status === 'low_stock' ? 'bg-amber-50 border-amber-200' :
+                    'bg-emerald-50 border-emerald-200'
+                  }`}>
+                    <p className={`text-xs font-bold ${
+                      game.inventory.status === 'out_of_stock' ? 'text-rose-800' :
+                      game.inventory.status === 'low_stock' ? 'text-amber-800' :
+                      'text-emerald-800'
+                    }`}>
+                      {game.inventory.status === 'out_of_stock' ? '❌ موجود نیست' :
+                       game.inventory.status === 'low_stock' ? `⚠️ موجودی کم: ${game.inventory.quantity} عدد` :
+                       `✅ موجود در انبار (${game.inventory.quantity} عدد)`}
+                    </p>
+                  </div>
+                )}
+
+                {/* Shipping Info */}
+                {game.shipping?.requiresShipping && (
+                  <div className="mb-4 rounded-xl bg-slate-50 border border-slate-200 p-3 space-y-2">
+                    <p className="text-xs font-bold text-slate-700 flex items-center gap-2">
+                      <Icon name="truck" size={14} />
+                      اطلاعات ارسال
+                    </p>
+                    <div className="text-xs text-slate-600 space-y-1">
+                      {game.shipping.freeShipping ? (
+                        <p className="text-emerald-600 font-semibold">ارسال رایگان</p>
+                      ) : (
+                        <p>هزینه ارسال: {game.shipping.shippingCost ? formatToman(game.shipping.shippingCost) : 'محاسبه در سبد خرید'} تومان</p>
+                      )}
+                      {game.shipping.weight && <p>وزن: {game.shipping.weight} گرم</p>}
+                    </div>
+                  </div>
+                )}
+
+                {/* Legacy Variant Stock Logic (Fallback) */}
+                {!game.inventory?.trackInventory && currentVariant && currentVariant.stock <= 5 && currentVariant.stock > 0 && (
                   <div className="mb-4 rounded-xl bg-amber-50 border border-amber-200 p-3">
                     <p className="text-xs font-bold text-amber-800">
                       ⚠️ فقط {currentVariant.stock} عدد باقی مانده!
@@ -374,7 +435,7 @@ export default function GameDetailClient({ initialGame }: GameDetailClientProps)
                   </div>
                 )}
 
-                {currentVariant && currentVariant.stock === 0 && (
+                {!game.inventory?.trackInventory && currentVariant && currentVariant.stock === 0 && (
                   <div className="mb-4 rounded-xl bg-rose-50 border border-rose-200 p-3">
                     <p className="text-xs font-bold text-rose-800">❌ موجود نیست</p>
                   </div>
@@ -390,10 +451,10 @@ export default function GameDetailClient({ initialGame }: GameDetailClientProps)
                         alert('لطفاً وارد حساب کاربری شوید');
                       }
                     }}
-                    disabled={currentVariant && currentVariant.stock === 0}
+                    disabled={(game.inventory?.status === 'out_of_stock') || (currentVariant && currentVariant.stock === 0)}
                     className="w-full rounded-2xl bg-[#0a84ff] py-4 text-base font-bold text-white shadow-lg shadow-blue-400/40 transition hover:bg-[#0071e3] disabled:opacity-50 disabled:cursor-not-allowed"
                   >
-                    {currentVariant && currentVariant.stock === 0 ? 'موجود نیست' : 'افزودن به سبد خرید'}
+                    {game.inventory?.status === 'out_of_stock' || (currentVariant && currentVariant.stock === 0) ? 'موجود نیست' : 'افزودن به سبد خرید'}
                   </button>
                   <button 
                     onClick={() => {
@@ -661,6 +722,21 @@ export default function GameDetailClient({ initialGame }: GameDetailClientProps)
                                 <p className="text-slate-600 whitespace-pre-line">{game.systemRequirements.recommended}</p>
                               </div>
                             )}
+                          </div>
+                        </div>
+                      )}
+                      
+                      {/* Custom Fields */}
+                      {game.customFields && Object.entries(game.customFields).length > 0 && (
+                        <div className="rounded-2xl bg-slate-50 p-6 mt-6">
+                          <h3 className="text-lg font-bold text-slate-900 mb-4">مشخصات تکمیلی</h3>
+                          <div className="space-y-3 text-sm">
+                            {Object.entries(game.customFields).map(([key, value]) => (
+                              <div key={key} className="flex justify-between border-b border-slate-200 pb-2 last:border-0 last:pb-0">
+                                <span className="text-slate-600">{key}:</span>
+                                <span className="font-semibold text-slate-900">{String(value)}</span>
+                              </div>
+                            ))}
                           </div>
                         </div>
                       )}

@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import Image from 'next/image';
 import { formatToman } from '@/lib/format';
+import { Icon } from '@/components/icons/Icon';
 
 export type CompactGame = {
   id: string;
@@ -12,9 +13,32 @@ export type CompactGame = {
   platform: string;
   price: number;
   tag?: string;
+  productType?: string;
 };
 
 export const CompactGameCard = ({ game }: { game: CompactGame }) => {
+  // Helper to get product type icon
+  const getProductTypeIcon = (type?: string) => {
+    switch (type) {
+      case 'physical_product':
+      case 'action_figure':
+        return { icon: 'package', color: 'text-purple-500' };
+      case 'gaming_gear':
+        return { icon: 'headset', color: 'text-indigo-500' };
+      case 'digital_content':
+        return { icon: 'book', color: 'text-cyan-500' };
+      case 'collectible':
+      case 'collectible_card':
+        return { icon: 'gem', color: 'text-amber-500' };
+      case 'apparel':
+        return { icon: 'shirt', color: 'text-pink-500' };
+      default:
+        return null;
+    }
+  };
+
+  const typeInfo = getProductTypeIcon(game.productType);
+
   return (
     <Link
       href={`/games/${game.slug}`}
@@ -35,6 +59,11 @@ export const CompactGameCard = ({ game }: { game: CompactGame }) => {
           {game.tag && (
             <span className="rounded-full bg-[#eef2ff] px-2 py-0.5 font-semibold text-[#4c5fd5]">
               {game.tag}
+            </span>
+          )}
+          {typeInfo && (
+            <span className={`flex items-center justify-center rounded-full bg-slate-50 p-1 ${typeInfo.color}`}>
+              <Icon name={typeInfo.icon as any} size={12} />
             </span>
           )}
         </div>

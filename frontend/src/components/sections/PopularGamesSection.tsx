@@ -18,20 +18,22 @@ type BackendGame = {
   safeAccountAvailable: boolean;
   coverUrl?: string;
   tags: string[];
+  productType?: string;
 };
 
 const mapBackendGameToCard = (game: BackendGame): GameCardContent => ({
   id: game.id,
   slug: game.slug,
   title: game.title,
-  platform: game.platform,
+  platform: game.platform || 'PC', // Default to PC if undefined
   price: game.basePrice,
   region: game.regionOptions[0] || 'R2',
   safe: game.safeAccountAvailable,
   monthlyPrice: Math.floor(game.basePrice * 0.3),
   category: game.genre[0]?.toLowerCase() || 'action',
   rating: 0, // Will be fetched dynamically via useGameRating hook
-  cover: game.coverUrl || 'https://images.igdb.com/igdb/image/upload/t_cover_big/nocover.webp'
+  cover: game.coverUrl || 'https://images.igdb.com/igdb/image/upload/t_cover_big/nocover.webp',
+  productType: game.productType as any
 });
 
 export const PopularGamesSection = () => {
@@ -100,9 +102,10 @@ export const PopularGamesSection = () => {
                 slug: game.slug || game.id,
                 cover: game.cover,
                 price: game.price,
-                platform: game.platform,
+                platform: game.platform || 'PC',
                 title: game.title,
-                tag: 'Popular'
+                tag: 'Popular',
+                productType: game.productType
               } satisfies CompactGame}
             />
           ))}
