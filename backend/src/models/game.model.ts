@@ -39,6 +39,34 @@ export interface GameDocument extends Document {
   onSale?: boolean;
   salePrice?: number;
 
+  // Multi-Product System Fields
+  productType: 'digital_game' | 'physical_product' | 'digital_content' | 'gaming_gear' | 'collectible' | 'bundle';
+  
+  // Dynamic custom fields for different product types
+  customFields?: Map<string, any>;
+  
+  // Inventory management (for physical products)
+  inventory?: {
+    trackInventory: boolean;
+    quantity: number;
+    reserved: number;
+    lowStockThreshold: number;
+    sku?: string;
+  };
+  
+  // Shipping information (for physical products)
+  shipping?: {
+    requiresShipping: boolean;
+    weight?: number; // grams
+    dimensions?: {
+      length: number; // cm
+      width: number;
+      height: number;
+    };
+    shippingCost?: number;
+    freeShippingThreshold?: number;
+  };
+
   options: {
     id: string;
     name: string;
@@ -90,6 +118,42 @@ const gameSchema = new Schema<GameDocument>(
     featured: { type: Boolean, default: false },
     onSale: { type: Boolean, default: false },
     salePrice: { type: Number },
+    
+    // Multi-Product System Fields
+    productType: {
+      type: String,
+      enum: ['digital_game', 'physical_product', 'digital_content', 'gaming_gear', 'collectible', 'bundle'],
+      default: 'digital_game'
+    },
+    
+    // Dynamic custom fields
+    customFields: {
+      type: Map,
+      of: Schema.Types.Mixed
+    },
+    
+    // Inventory management
+    inventory: {
+      trackInventory: { type: Boolean, default: false },
+      quantity: { type: Number, default: 0 },
+      reserved: { type: Number, default: 0 },
+      lowStockThreshold: { type: Number, default: 5 },
+      sku: { type: String }
+    },
+    
+    // Shipping information
+    shipping: {
+      requiresShipping: { type: Boolean, default: false },
+      weight: { type: Number }, // grams
+      dimensions: {
+        length: { type: Number }, // cm
+        width: { type: Number },
+        height: { type: Number }
+      },
+      shippingCost: { type: Number },
+      freeShippingThreshold: { type: Number }
+    },
+    
     // Options and variants
     options: [
       {
