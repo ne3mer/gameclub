@@ -59,7 +59,7 @@ export default function HowItWorks() {
           viewport={{ once: true }}
           className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-cyan-500/10 border border-cyan-500/30 mb-4"
         >
-          <Icon name="help-circle" size={16} className="text-cyan-400" />
+          <Icon name="info" size={16} className="text-cyan-400" />
           <span className="text-sm font-bold text-cyan-400">راهنما</span>
         </motion.div>
         <h2 className="text-4xl md:text-5xl font-black text-white mb-4">
