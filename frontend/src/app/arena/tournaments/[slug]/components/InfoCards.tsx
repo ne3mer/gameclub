@@ -11,7 +11,7 @@ export default function InfoCards({
   participantCount: number;
 }) {
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 -mt-20 relative z-10">
+    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 -mt-10 md:-mt-20 relative z-10">
       {/* Prize Pool Card */}
       <div className="rounded-3xl border border-slate-700 bg-gradient-to-br from-slate-900 to-slate-800 p-6 backdrop-blur-sm shadow-2xl">
         <div className="flex items-center justify-between mb-4">

@@ -109,15 +109,15 @@ function FilterButton({ children, active, onClick, icon }: any) {
     <button
       onClick={onClick}
       className={`
-        px-6 py-3 rounded-xl font-bold transition-all
+        px-4 py-2 sm:px-6 sm:py-3 rounded-xl font-bold transition-all text-xs sm:text-sm
         ${active
           ? 'bg-gradient-to-r from-purple-600 to-pink-600 text-white shadow-lg shadow-purple-500/50'
           : 'bg-slate-800 text-slate-400 hover:bg-slate-700 hover:text-white'
         }
       `}
     >
-      <span className="flex items-center gap-2">
-        <Icon name={icon} size={18} />
+      <span className="flex items-center gap-1.5 sm:gap-2">
+        <Icon name={icon} size={16} className="sm:w-[18px] sm:h-[18px]" />
         {children}
       </span>
     </button>

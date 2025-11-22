@@ -553,9 +553,28 @@ export default function OrdersPage() {
           </div>
         </div>
 
-        <aside className="space-y-4 rounded-3xl border border-slate-100 bg-white p-6 shadow-sm">
+        <aside className={`
+          space-y-4 bg-white transition-all duration-300
+          lg:static lg:block lg:rounded-3xl lg:border lg:border-slate-100 lg:p-6 lg:shadow-sm lg:col-span-1
+          ${selectedOrder 
+            ? 'fixed inset-0 z-50 overflow-y-auto p-4' 
+            : 'hidden lg:block lg:opacity-100'
+          }
+        `}>
           {selectedOrder ? (
             <>
+              <div className="flex items-center justify-between lg:hidden mb-6 border-b border-slate-100 pb-4">
+                <h3 className="font-bold text-slate-900">جزئیات سفارش</h3>
+                <button 
+                  onClick={() => setSelectedOrderId(null)}
+                  className="rounded-xl bg-slate-100 p-2 text-slate-600 hover:bg-slate-200"
+                >
+                  <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              </div>
+
               <div className="space-y-1">
                 <p className="text-xs text-slate-500">شماره سفارش</p>
                 <p className="text-lg font-black text-slate-900">{selectedOrder.orderNumber}</p>
@@ -732,7 +751,7 @@ export default function OrdersPage() {
               </div>
             </>
           ) : (
-            <div className="text-center text-sm text-slate-500">
+            <div className="text-center text-sm text-slate-500 hidden lg:block">
               برای مشاهده جزئیات، یک سفارش را از لیست انتخاب کنید.
             </div>
           )}

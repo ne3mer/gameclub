@@ -30,16 +30,16 @@ export default function ArenaHero() {
           </motion.div>
 
           {/* Main Title */}
-          <h1 className="text-6xl md:text-8xl font-black">
+          <h1 className="text-4xl sm:text-6xl md:text-8xl font-black">
             <span className="bg-gradient-to-r from-purple-400 via-pink-400 to-cyan-400 bg-clip-text text-transparent">
               آرنا بازی
             </span>
           </h1>
 
           {/* Subtitle */}
-          <p className="text-xl md:text-2xl text-slate-300 max-w-3xl mx-auto leading-relaxed">
+          <p className="text-base sm:text-xl md:text-2xl text-slate-300 max-w-3xl mx-auto leading-relaxed px-4">
             در تورنمنت‌های آنلاین شرکت کنید، مهارت‌های خود را به نمایش بگذارید
-            <br />
+            <br className="hidden sm:block" />
             و جوایز نقدی واقعی ببرید 🏆
           </p>
 
@@ -48,27 +48,27 @@ export default function ArenaHero() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.4 }}
-            className="flex flex-wrap justify-center gap-8 pt-8"
+            className="flex flex-col sm:flex-row flex-wrap justify-center items-center gap-6 sm:gap-8 pt-8"
           >
             <div className="text-center">
-              <div className="text-4xl font-black bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent">
+              <div className="text-3xl sm:text-4xl font-black bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent">
                 1,234
               </div>
-              <div className="text-sm text-slate-400 mt-1">بازیکن فعال</div>
+              <div className="text-xs sm:text-sm text-slate-400 mt-1">بازیکن فعال</div>
             </div>
-            <div className="w-px h-16 bg-slate-700" />
+            <div className="hidden sm:block w-px h-16 bg-slate-700" />
             <div className="text-center">
-              <div className="text-4xl font-black bg-gradient-to-r from-cyan-400 to-blue-400 bg-clip-text text-transparent">
+              <div className="text-3xl sm:text-4xl font-black bg-gradient-to-r from-cyan-400 to-blue-400 bg-clip-text text-transparent">
                 48
               </div>
-              <div className="text-sm text-slate-400 mt-1">تورنمنت فعال</div>
+              <div className="text-xs sm:text-sm text-slate-400 mt-1">تورنمنت فعال</div>
             </div>
-            <div className="w-px h-16 bg-slate-700" />
+            <div className="hidden sm:block w-px h-16 bg-slate-700" />
             <div className="text-center">
-              <div className="text-4xl font-black bg-gradient-to-r from-yellow-400 to-orange-400 bg-clip-text text-transparent">
+              <div className="text-3xl sm:text-4xl font-black bg-gradient-to-r from-yellow-400 to-orange-400 bg-clip-text text-transparent">
                 ۵۰M+
               </div>
-              <div className="text-sm text-slate-400 mt-1">جوایز پرداختی</div>
+              <div className="text-xs sm:text-sm text-slate-400 mt-1">جوایز پرداختی</div>
             </div>
           </motion.div>
 

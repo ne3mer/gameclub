@@ -58,8 +58,8 @@ export function GameRequestsList({ requests, onDelete }: GameRequestsListProps) 
             key={request._id}
             className="group rounded-3xl border border-slate-200 bg-white p-6 transition hover:shadow-lg"
           >
-            <div className="flex items-start justify-between gap-4">
-              <div className="flex-1">
+            <div className="flex flex-col sm:flex-row items-start justify-between gap-4">
+              <div className="flex-1 w-full">
                 {/* Game Name */}
                 <h3 className="mb-2 text-xl font-black text-slate-900">{request.gameName}</h3>
                 
@@ -105,7 +105,7 @@ export function GameRequestsList({ requests, onDelete }: GameRequestsListProps) 
               </div>
 
               {/* Status & Actions */}
-              <div className="flex flex-col items-end gap-3">
+              <div className="flex w-full sm:w-auto flex-row sm:flex-col items-center sm:items-end justify-between sm:justify-start gap-3 mt-2 sm:mt-0 border-t sm:border-t-0 border-slate-100 pt-3 sm:pt-0">
                 <span className={`inline-flex items-center gap-2 rounded-full border px-4 py-2 text-xs font-bold ${statusConfig.color}`}>
                   <Icon name={statusConfig.icon} size={14} className={statusConfig.iconColor} />
                   {statusConfig.label}

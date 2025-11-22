@@ -56,7 +56,7 @@ export default function TournamentHeader({ tournament }: { tournament: Tournamen
   };
 
   return (
-    <div className="relative h-[500px] overflow-hidden">
+    <div className="relative h-[400px] md:h-[500px] overflow-hidden">
       {/* Background Image */}
       <Image
         src={tournament.game.image || '/images/default-game.jpg'}
