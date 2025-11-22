@@ -84,7 +84,7 @@ export default function ArenaHero() {
               className="group relative px-8 py-4 rounded-2xl bg-gradient-to-r from-purple-600 to-pink-600 font-bold text-white overflow-hidden transition-all hover:scale-105 hover:shadow-2xl hover:shadow-purple-500/50"
             >
               <span className="relative z-10 flex items-center gap-2">
-                <Icon name="gamepad" size={20} />
+                <Icon name="game" size={20} />
                 مشاهده تورنمنت‌ها
               </span>
               <div className="absolute inset-0 bg-gradient-to-r from-pink-600 to-purple-600 opacity-0 group-hover:opacity-100 transition-opacity" />

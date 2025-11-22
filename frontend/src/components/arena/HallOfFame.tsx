@@ -22,7 +22,7 @@ export default function HallOfFame() {
           viewport={{ once: true }}
           className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-yellow-500/10 border border-yellow-500/30 mb-4"
         >
-          <Icon name="trophy" size={16} className="text-yellow-400" />
+          <Icon name="award" size={16} className="text-yellow-400" />
           <span className="text-sm font-bold text-yellow-400">تالار مشاهیر</span>
         </motion.div>
         <h2 className="text-4xl md:text-5xl font-black text-white mb-4">
