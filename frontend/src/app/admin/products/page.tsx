@@ -117,25 +117,26 @@ export default function ProductsPage() {
 
   return (
     <div className="space-y-6">
-      <header className="flex items-center justify-between flex-wrap gap-4">
+      <header className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4">
         <div>
-          <h1 className="text-2xl font-black text-slate-900">لیست محصولات</h1>
+          <h1 className="text-xl sm:text-2xl font-black text-slate-900">لیست محصولات</h1>
           <p className="text-sm text-slate-500 mt-1">مدیریت و ویرایش محصولات موجود</p>
         </div>
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2 sm:gap-3">
           <Link
             href="/admin/products/new"
-            className="flex items-center gap-2 rounded-xl bg-gradient-to-r from-emerald-500 to-emerald-600 px-5 py-2.5 text-sm font-bold text-white shadow-lg shadow-emerald-500/30 hover:from-emerald-600 hover:to-emerald-700 transition-all duration-200 hover:scale-105"
+            className="flex items-center gap-2 rounded-xl bg-gradient-to-r from-emerald-500 to-emerald-600 px-4 sm:px-5 py-2.5 text-sm font-bold text-white shadow-lg shadow-emerald-500/30 hover:from-emerald-600 hover:to-emerald-700 transition-all duration-200 hover:scale-105"
           >
             <Icon name="plus" size={16} />
-            افزودن محصول جدید
+            <span className="hidden sm:inline">افزودن محصول جدید</span>
+            <span className="sm:hidden">جدید</span>
           </Link>
           <button
             onClick={fetchProducts}
-            className="flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-bold text-slate-700 hover:bg-slate-50 transition"
+            className="flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-3 sm:px-4 py-2.5 text-sm font-bold text-slate-700 hover:bg-slate-50 transition active:bg-slate-100"
           >
             <Icon name="refresh" size={16} />
-            بروزرسانی
+            <span className="hidden sm:inline">بروزرسانی</span>
           </button>
         </div>
       </header>
