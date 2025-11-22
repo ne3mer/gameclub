@@ -36,6 +36,14 @@ export interface ProductTemplate {
     requiresShipping: boolean;
     required: boolean;
   };
+  baseFieldConfig?: {
+    platform?: { show: boolean; required: boolean };
+    region?: { show: boolean; required: boolean };
+    releaseDate?: { show: boolean; required: boolean };
+    developer?: { show: boolean; required: boolean };
+    publisher?: { show: boolean; required: boolean };
+    ageRating?: { show: boolean; required: boolean };
+  };
 }
 
 export const PRODUCT_TEMPLATES: Record<string, ProductTemplate> = {
@@ -48,7 +56,15 @@ export const PRODUCT_TEMPLATES: Record<string, ProductTemplate> = {
     description: 'بازی‌های دیجیتال برای کنسول‌ها و PC',
     fields: [],
     inventory: { trackInventory: false, required: false },
-    shipping: { requiresShipping: false, required: false }
+    shipping: { requiresShipping: false, required: false },
+    baseFieldConfig: {
+      platform: { show: true, required: true },
+      region: { show: true, required: true },
+      releaseDate: { show: true, required: false },
+      developer: { show: true, required: false },
+      publisher: { show: true, required: false },
+      ageRating: { show: true, required: false }
+    }
   },
   action_figure: {
     id: 'action_figure',
@@ -68,7 +84,15 @@ export const PRODUCT_TEMPLATES: Record<string, ProductTemplate> = {
       { name: 'limited', label: 'نسخه محدود', type: 'boolean' }
     ],
     inventory: { trackInventory: true, required: true },
-    shipping: { requiresShipping: true, required: true }
+    shipping: { requiresShipping: true, required: true },
+    baseFieldConfig: {
+      platform: { show: false, required: false },
+      region: { show: false, required: false },
+      releaseDate: { show: false, required: false },
+      developer: { show: false, required: false },
+      publisher: { show: false, required: false },
+      ageRating: { show: false, required: false }
+    }
   },
   collectible_card: {
     id: 'collectible_card',
@@ -85,7 +109,15 @@ export const PRODUCT_TEMPLATES: Record<string, ProductTemplate> = {
       { name: 'graded', label: 'گرید شده', type: 'boolean' }
     ],
     inventory: { trackInventory: true, required: true },
-    shipping: { requiresShipping: true, required: true }
+    shipping: { requiresShipping: true, required: true },
+    baseFieldConfig: {
+      platform: { show: false, required: false },
+      region: { show: false, required: false },
+      releaseDate: { show: false, required: false },
+      developer: { show: false, required: false },
+      publisher: { show: false, required: false },
+      ageRating: { show: false, required: false }
+    }
   },
   gaming_gear: {
     id: 'gaming_gear',
@@ -102,7 +134,15 @@ export const PRODUCT_TEMPLATES: Record<string, ProductTemplate> = {
       { name: 'warranty', label: 'گارانتی', type: 'text' }
     ],
     inventory: { trackInventory: true, required: true },
-    shipping: { requiresShipping: true, required: true }
+    shipping: { requiresShipping: true, required: true },
+    baseFieldConfig: {
+      platform: { show: false, required: false },
+      region: { show: false, required: false },
+      releaseDate: { show: false, required: false },
+      developer: { show: false, required: false },
+      publisher: { show: false, required: false },
+      ageRating: { show: false, required: false }
+    }
   },
   apparel: {
     id: 'apparel',
@@ -118,7 +158,15 @@ export const PRODUCT_TEMPLATES: Record<string, ProductTemplate> = {
       { name: 'official', label: 'رسمی', type: 'boolean' }
     ],
     inventory: { trackInventory: true, required: true },
-    shipping: { requiresShipping: true, required: true }
+    shipping: { requiresShipping: true, required: true },
+    baseFieldConfig: {
+      platform: { show: false, required: false },
+      region: { show: false, required: false },
+      releaseDate: { show: false, required: false },
+      developer: { show: false, required: false },
+      publisher: { show: false, required: false },
+      ageRating: { show: false, required: false }
+    }
   },
   digital_content: {
     id: 'digital_content',
@@ -133,7 +181,15 @@ export const PRODUCT_TEMPLATES: Record<string, ProductTemplate> = {
       { name: 'fileSize', label: 'حجم', type: 'text' }
     ],
     inventory: { trackInventory: false, required: false },
-    shipping: { requiresShipping: false, required: false }
+    shipping: { requiresShipping: false, required: false },
+    baseFieldConfig: {
+      platform: { show: false, required: false },
+      region: { show: false, required: false },
+      releaseDate: { show: false, required: false },
+      developer: { show: false, required: false },
+      publisher: { show: false, required: false },
+      ageRating: { show: false, required: false }
+    }
   }
 };
 

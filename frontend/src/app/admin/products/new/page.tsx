@@ -376,22 +376,27 @@ export default function NewProductPage() {
                 <p className="text-xs text-slate-500 mt-1">فقط حروف انگلیسی، اعداد و خط تیره</p>
               </label>
 
-              <label>
-                <span className="text-sm font-bold text-slate-700 mb-2 block">پلتفرم *</span>
-                <select
-                  value={newProduct.platform}
-                  onChange={(event) => handleNewProductChange('platform', event.target.value)}
-                  className="w-full rounded-xl border border-slate-200 px-4 py-3 text-sm focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 transition"
-                  required
-                >
-                  <option value="PS5">PlayStation 5</option>
-                  <option value="PS4">PlayStation 4</option>
-                  <option value="Xbox Series X|S">Xbox Series X|S</option>
-                  <option value="Xbox One">Xbox One</option>
-                  <option value="PC">PC</option>
-                  <option value="Nintendo Switch">Nintendo Switch</option>
-                </select>
-              </label>
+              {/* Platform - Only for games */}
+              {template?.baseFieldConfig?.platform?.show && (
+                <label>
+                  <span className="text-sm font-bold text-slate-700 mb-2 block">
+                    پلتفرم {template?.baseFieldConfig?.platform?.required && '*'}
+                  </span>
+                  <select
+                    value={newProduct.platform}
+                    onChange={(event) => handleNewProductChange('platform', event.target.value)}
+                    className="w-full rounded-xl border border-slate-200 px-4 py-3 text-sm focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 transition"
+                    required={template?.baseFieldConfig?.platform?.required}
+                  >
+                    <option value="PS5">PlayStation 5</option>
+                    <option value="PS4">PlayStation 4</option>
+                    <option value="Xbox Series X|S">Xbox Series X|S</option>
+                    <option value="Xbox One">Xbox One</option>
+                    <option value="PC">PC</option>
+                    <option value="Nintendo Switch">Nintendo Switch</option>
+                  </select>
+                </label>
+              )}
 
               <label>
                 <span className="text-sm font-bold text-slate-700 mb-2 block">قیمت پایه (تومان) *</span>
@@ -416,15 +421,21 @@ export default function NewProductPage() {
                 />
               </label>
 
-              <label>
-                <span className="text-sm font-bold text-slate-700 mb-2 block">مناطق (با کاما)</span>
-                <input
-                  value={newProduct.regionOptions}
-                  onChange={(event) => handleNewProductChange('regionOptions', event.target.value)}
-                  className="w-full rounded-xl border border-slate-200 px-4 py-3 text-sm focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 transition"
-                  placeholder="R1, R2, R3"
-                />
-              </label>
+              {/* Region - Only for games */}
+              {template?.baseFieldConfig?.region?.show && (
+                <label>
+                  <span className="text-sm font-bold text-slate-700 mb-2 block">
+                    مناطق {template?.baseFieldConfig?.region?.required && '(با کاما)'}
+                  </span>
+                  <input
+                    value={newProduct.regionOptions}
+                    onChange={(event) => handleNewProductChange('regionOptions', event.target.value)}
+                    className="w-full rounded-xl border border-slate-200 px-4 py-3 text-sm focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 transition"
+                    placeholder="R1, R2, R3"
+                    required={template?.baseFieldConfig?.region?.required}
+                  />
+                </label>
+              )}
 
               <label className="md:col-span-2">
                 <span className="text-sm font-bold text-slate-700 mb-2 block">توضیحات کوتاه *</span>
@@ -711,51 +722,80 @@ export default function NewProductPage() {
                 />
               </label>
 
-              <label>
-                <span className="text-sm font-bold text-slate-700 mb-2 block">تاریخ انتشار</span>
-                <input
-                  type="date"
-                  value={newProduct.releaseDate}
-                  onChange={(event) => handleNewProductChange('releaseDate', event.target.value)}
-                  className="w-full rounded-xl border border-slate-200 px-4 py-3 text-sm focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 transition"
-                />
-              </label>
+              {/* Release Date - Only for games */}
+              {template?.baseFieldConfig?.releaseDate?.show && (
+                <label>
+                  <span className="text-sm font-bold text-slate-700 mb-2 block">
+                    تاریخ انتشار {template?.baseFieldConfig?.releaseDate?.required && '*'}
+                  </span>
+                  <input
+                    type="date"
+                    value={newProduct.releaseDate}
+                    onChange={(event) => handleNewProductChange('releaseDate', event.target.value)}
+                    className="w-full rounded-xl border border-slate-200 px-4 py-3 text-sm focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 transition"
+                    required={template?.baseFieldConfig?.releaseDate?.required}
+                  />
+                </label>
+              )}
 
-              <label>
-                <span className="text-sm font-bold text-slate-700 mb-2 block">توسعه‌دهنده</span>
-                <input
-                  value={newProduct.developer}
-                  onChange={(event) => handleNewProductChange('developer', event.target.value)}
-                  className="w-full rounded-xl border border-slate-200 px-4 py-3 text-sm focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 transition"
-                  placeholder="مثال: Santa Monica Studio"
-                />
-              </label>
+              {/* Developer - Only for games */}
+              {template?.baseFieldConfig?.developer?.show && (
+                <label>
+                  <span className="text-sm font-bold text-slate-700 mb-2 block">
+                    توسعه‌دهنده {template?.baseFieldConfig?.developer?.required && '*'}
+                  </span>
+                  <input
+                    value={newProduct.developer}
+                    onChange={(event) => handleNewProductChange('developer', event.target.value)}
+                    className="w-full rounded-xl border border-slate-200 px-4 py-3 text-sm focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 transition"
+                    placeholder="مثال: Santa Monica Studio"
+                    required={template?.baseFieldConfig?.developer?.required}
+                  />
+                </label>
+              )}
 
-              <label>
-                <span className="text-sm font-bold text-slate-700 mb-2 block">ناشر</span>
-                <input
-                  value={newProduct.publisher}
-                  onChange={(event) => handleNewProductChange('publisher', event.target.value)}
-                  className="w-full rounded-xl border border-slate-200 px-4 py-3 text-sm focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 transition"
-                  placeholder="مثال: Sony Interactive Entertainment"
-                />
-              </label>
+              {/* Publisher - Only for games */}
+              {template?.baseFieldConfig?.publisher?.show && (
+                <label>
+                  <span className="text-sm font-bold text-slate-700 mb-2 block">
+                    ناشر {template?.baseFieldConfig?.publisher?.required && '*'}
+                  </span>
+                  <input
+                    value={newProduct.publisher}
+                    onChange={(event) => handleNewProductChange('publisher', event.target.value)}
+                    className="w-full rounded-xl border border-slate-200 px-4 py-3 text-sm focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 transition"
+                    placeholder="مثال: Sony Interactive Entertainment"
+                    required={template?.baseFieldConfig?.publisher?.required}
+                  />
+                </label>
+              )}
 
-              <label>
-                <span className="text-sm font-bold text-slate-700 mb-2 block">رده سنی</span>
-                <select
-                  value={newProduct.ageRating}
-                  onChange={(event) => handleNewProductChange('ageRating', event.target.value)}
-                  className="w-full rounded-xl border border-slate-200 px-4 py-3 text-sm focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 transition"
-                >
-                  <option value="">انتخاب کنید</option>
-                  <option value="E">E - Everyone</option>
-                  <option value="E10+">E10+ - Everyone 10+</option>
-                  <option value="T">T - Teen</option>
-                  <option value="M">M - Mature</option>
-                  <option value="AO">AO - Adults Only</option>
-                </select>
-              </label>
+              {/* Age Rating - Only for games */}
+              {template?.baseFieldConfig?.ageRating?.show && (
+                <label>
+                  <span className="text-sm font-bold text-slate-700 mb-2 block">
+                    رده سنی {template?.baseFieldConfig?.ageRating?.required && '*'}
+                  </span>
+                  <select
+                    value={newProduct.ageRating}
+                    onChange={(event) => handleNewProductChange('ageRating', event.target.value)}
+                    className="w-full rounded-xl border border-slate-200 px-4 py-3 text-sm focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 transition"
+                    required={template?.baseFieldConfig?.ageRating?.required}
+                  >
+                    <option value="">انتخاب کنید</option>
+                    <option value="PEGI 3">PEGI 3</option>
+                    <option value="PEGI 7">PEGI 7</option>
+                    <option value="PEGI 12">PEGI 12</option>
+                    <option value="PEGI 16">PEGI 16</option>
+                    <option value="PEGI 18">PEGI 18</option>
+                    <option value="E">E (Everyone)</option>
+                    <option value="E10+">E10+ (Everyone 10+)</option>
+                    <option value="T">T (Teen)</option>
+                    <option value="M">M (Mature 17+)</option>
+                    <option value="AO">AO (Adults Only)</option>
+                  </select>
+                </label>
+              )}
 
               <label className="md:col-span-2">
                 <span className="text-sm font-bold text-slate-700 mb-2 block">ویژگی‌ها (با کاما)</span>
