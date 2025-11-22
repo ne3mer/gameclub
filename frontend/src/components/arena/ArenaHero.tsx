@@ -25,7 +25,7 @@ export default function ArenaHero() {
             transition={{ delay: 0.2 }}
             className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-gradient-to-r from-purple-500/20 to-cyan-500/20 border border-purple-500/30 backdrop-blur-sm"
           >
-            <Icon name="trophy" size={16} className="text-yellow-400" />
+            <Icon name="award" size={16} className="text-yellow-400" />
             <span className="text-sm font-bold text-white">آرنا رسمی NextPlay</span>
           </motion.div>
 
