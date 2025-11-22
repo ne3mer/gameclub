@@ -95,7 +95,7 @@ export default function ArenaHero() {
               className="px-8 py-4 rounded-2xl border-2 border-slate-700 font-bold text-white hover:border-purple-500 hover:bg-purple-500/10 transition-all"
             >
               <span className="flex items-center gap-2">
-                <Icon name="user-plus" size={20} />
+                <Icon name="user" size={20} />
                 ثبت‌نام رایگان
               </span>
             </Link>
