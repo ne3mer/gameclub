@@ -209,11 +209,11 @@ function GamesContent() {
       {/* Filter Accordion */}
       <FilterAccordion activeFiltersCount={activeFiltersCount} onClearFilters={handleClearFilters} />
 
-      <div className="mx-auto max-w-[1400px] px-6 py-12 md:px-12">
+      <div className="mx-auto max-w-[1400px] px-4 sm:px-6 md:px-12 py-8 md:py-12">
         
         {/* Sort & Results Header */}
-        <div className="flex flex-col gap-6 md:flex-row md:items-center md:justify-between mb-10">
-          <p className="text-sm font-medium text-slate-500">
+        <div className="flex flex-col gap-4 md:gap-6 md:flex-row md:items-center md:justify-between mb-8 md:mb-10">
+          <p className="text-xs md:text-sm font-medium text-slate-500">
             نمایش <span className="font-bold text-slate-900">{(startIndex + 1).toLocaleString('fa-IR')}-{Math.min(startIndex + paginatedGames.length, filteredGames.length).toLocaleString('fa-IR')}</span> از <span className="font-bold text-slate-900">{filteredGames.length.toLocaleString('fa-IR')}</span> بازی
           </p>
           
@@ -222,7 +222,7 @@ function GamesContent() {
               <button
                 key={option.value}
                 onClick={() => updateQuery({ sort: option.value === 'newest' ? null : option.value }, { resetPage: true })}
-                className={`rounded-full px-4 py-2 text-xs font-bold tracking-wide transition ${
+                className={`rounded-full px-3 py-1.5 md:px-4 md:py-2 text-[10px] md:text-xs font-bold tracking-wide transition ${
                   currentSort === option.value
                     ? 'bg-slate-900 text-white'
                     : 'bg-white text-slate-500 hover:bg-slate-100'
@@ -236,16 +236,16 @@ function GamesContent() {
 
         {/* Loading State */}
         {loading && (
-          <div className="grid gap-x-8 gap-y-12 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5">
+          <div className="grid gap-x-4 gap-y-8 sm:gap-x-6 sm:gap-y-10 md:gap-x-8 md:gap-y-12 grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5">
             {Array.from({ length: 10 }).map((_, idx) => (
-              <div key={idx} className="aspect-[3/4] rounded-3xl bg-slate-100 animate-pulse" />
+              <div key={idx} className="aspect-[3/4] rounded-2xl md:rounded-3xl bg-slate-100 animate-pulse" />
             ))}
           </div>
         )}
 
         {/* Error State */}
         {error && (
-          <div className="rounded-3xl bg-rose-50 p-12 text-center">
+          <div className="rounded-2xl md:rounded-3xl bg-rose-50 p-8 md:p-12 text-center">
             <p className="text-rose-500 font-medium">{error}</p>
             <button onClick={() => window.location.reload()} className="mt-4 text-sm font-bold underline">تلاش مجدد</button>
           </div>
@@ -253,17 +253,17 @@ function GamesContent() {
 
         {/* Empty State */}
         {!loading && !error && filteredGames.length === 0 && (
-          <div className="flex flex-col items-center justify-center py-24 text-center">
-            <div className="h-24 w-24 rounded-full bg-slate-50 flex items-center justify-center mb-6">
-              <Icon name="search" size={32} className="text-slate-300" />
+          <div className="flex flex-col items-center justify-center py-16 md:py-24 text-center">
+            <div className="h-20 w-20 md:h-24 md:w-24 rounded-full bg-slate-50 flex items-center justify-center mb-4 md:mb-6">
+              <Icon name="search" size={24} className="text-slate-300 md:w-8 md:h-8" />
             </div>
-            <h3 className="text-2xl font-black text-slate-900 mb-2">بازی‌ای یافت نشد</h3>
-            <p className="text-slate-500 max-w-md mx-auto">
+            <h3 className="text-xl md:text-2xl font-black text-slate-900 mb-2">بازی‌ای یافت نشد</h3>
+            <p className="text-sm md:text-base text-slate-500 max-w-md mx-auto px-4">
               متأسفانه بازی‌ای با فیلترهای انتخابی شما پیدا نشد. لطفاً فیلترهای خود را تغییر دهید یا آن‌ها را پاک کنید.
             </p>
             <button
               onClick={handleClearFilters}
-              className="mt-8 rounded-full bg-slate-900 px-8 py-3 text-sm font-bold text-white transition hover:bg-slate-800"
+              className="mt-6 md:mt-8 rounded-full bg-slate-900 px-6 py-2.5 md:px-8 md:py-3 text-xs md:text-sm font-bold text-white transition hover:bg-slate-800"
             >
               پاک کردن همه فیلترها
             </button>
@@ -273,7 +273,7 @@ function GamesContent() {
         {/* Games Grid */}
         {!loading && !error && filteredGames.length > 0 && (
           <>
-            <div className="grid gap-x-8 gap-y-12 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5">
+            <div className="grid gap-x-4 gap-y-8 sm:gap-x-6 sm:gap-y-10 md:gap-x-8 md:gap-y-12 grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5">
               {paginatedGames.map((game) => (
                 <MinimalGameCard key={game.id} game={game} />
               ))}

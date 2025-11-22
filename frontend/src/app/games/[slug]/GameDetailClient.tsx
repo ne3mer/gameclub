@@ -256,38 +256,38 @@ export default function GameDetailClient({ initialGame }: GameDetailClientProps)
             <div className="absolute -right-10 top-0 h-64 w-64 rounded-full bg-rose-100 blur-[100px]" />
             <div className="absolute left-4 bottom-0 h-48 w-48 rounded-full bg-sky-100 blur-[120px]" />
           </div>
-          <div className="relative grid gap-8 p-8 md:grid-cols-2 md:p-12">
-            <div className="space-y-6">
+          <div className="relative grid gap-6 p-6 md:grid-cols-2 md:gap-8 md:p-12">
+            <div className="space-y-4 md:space-y-6">
               {game.featured && (
-                <span className="inline-flex items-center gap-2 rounded-full bg-[#0a84ff] px-4 py-1.5 text-xs font-bold text-white shadow-sm">
+                <span className="inline-flex items-center gap-2 rounded-full bg-[#0a84ff] px-3 py-1 md:px-4 md:py-1.5 text-[10px] md:text-xs font-bold text-white shadow-sm">
                   <Icon name="star" size={14} />
                   محصول ویژه
                 </span>
               )}
               <div>
-                <p className="mb-2 text-sm font-semibold text-rose-500">{game.platform}</p>
-                <h1 className="mb-4 text-4xl font-black leading-tight text-slate-900 md:text-5xl">{game.title}</h1>
-                <p className="text-lg leading-relaxed text-slate-600">{game.description}</p>
+                <p className="mb-2 text-xs md:text-sm font-semibold text-rose-500">{game.platform}</p>
+                <h1 className="mb-3 md:mb-4 text-3xl font-black leading-tight text-slate-900 md:text-5xl">{game.title}</h1>
+                <p className="text-base md:text-lg leading-relaxed text-slate-600">{game.description}</p>
               </div>
               
               {/* Rating & Metadata */}
-              <div className="flex flex-wrap items-center gap-4">
+              <div className="flex flex-wrap items-center gap-3 md:gap-4">
                 {gameRating !== null && gameRating > 0 && (
-                  <div className="flex items-center gap-2 rounded-full border border-orange-100 bg-orange-50 px-4 py-2 text-orange-600">
-                    <Icon name="star" size={18} className="text-amber-400" />
-                    <span className="font-bold">{gameRating.toFixed(1)}</span>
+                  <div className="flex items-center gap-2 rounded-full border border-orange-100 bg-orange-50 px-3 py-1.5 md:px-4 md:py-2 text-orange-600">
+                    <Icon name="star" size={16} className="text-amber-400 md:w-[18px] md:h-[18px]" />
+                    <span className="font-bold text-sm md:text-base">{gameRating.toFixed(1)}</span>
                     {reviewCount > 0 && (
-                      <span className="text-xs text-orange-500">({reviewCount})</span>
+                      <span className="text-[10px] md:text-xs text-orange-500">({reviewCount})</span>
                     )}
                   </div>
                 )}
                 {game.releaseDate && (
-                  <div className="text-sm text-slate-500">
+                  <div className="text-xs md:text-sm text-slate-500">
                     <span className="font-semibold text-slate-700">تاریخ انتشار:</span> {new Date(game.releaseDate).toLocaleDateString('fa-IR')}
                   </div>
                 )}
                 {game.ageRating && (
-                  <div className="rounded-full border border-slate-200 bg-slate-50 px-4 py-2 text-sm font-bold text-slate-700">
+                  <div className="rounded-full border border-slate-200 bg-slate-50 px-3 py-1.5 md:px-4 md:py-2 text-xs md:text-sm font-bold text-slate-700">
                     {game.ageRating}
                   </div>
                 )}
@@ -297,7 +297,7 @@ export default function GameDetailClient({ initialGame }: GameDetailClientProps)
               {game.tags.length > 0 && (
                 <div className="flex flex-wrap gap-2">
                   {game.tags.map((tag) => (
-                    <span key={tag} className="rounded-full border border-slate-200 bg-white px-3 py-1 text-xs font-semibold text-slate-600">
+                    <span key={tag} className="rounded-full border border-slate-200 bg-white px-2.5 py-0.5 md:px-3 md:py-1 text-[10px] md:text-xs font-semibold text-slate-600">
                       {tag}
                     </span>
                   ))}
@@ -306,7 +306,7 @@ export default function GameDetailClient({ initialGame }: GameDetailClientProps)
             </div>
 
             {/* Cover Image */}
-            <div className="relative min-h-[400px] h-96 overflow-hidden rounded-2xl border border-slate-200 bg-slate-50 shadow-lg md:h-full">
+            <div className="relative aspect-square sm:aspect-[4/3] md:aspect-auto md:h-full overflow-hidden rounded-2xl border border-slate-200 bg-slate-50 shadow-lg">
               <Image 
                 src={defaultCover} 
                 alt={game.title} 
@@ -316,7 +316,7 @@ export default function GameDetailClient({ initialGame }: GameDetailClientProps)
                 priority
               />
               {game.onSale && (
-                <div className="absolute left-4 top-4 rounded-full bg-rose-500 px-4 py-2 text-sm font-bold text-white shadow-lg">
+                <div className="absolute left-4 top-4 rounded-full bg-rose-500 px-3 py-1.5 md:px-4 md:py-2 text-xs md:text-sm font-bold text-white shadow-lg">
                   {discountPercent}% تخفیف
                 </div>
               )}
@@ -324,12 +324,125 @@ export default function GameDetailClient({ initialGame }: GameDetailClientProps)
           </div>
         </div>
 
-        <div className="grid lg:grid-cols-3 gap-8">
+        <div className="flex flex-col lg:grid lg:grid-cols-3 gap-8">
+          
+          {/* Sidebar - Purchase Card (Appears first on mobile) */}
+          <div className="lg:col-span-1 lg:col-start-3 lg:row-start-1">
+            <div className="sticky top-8 space-y-6">
+              {/* Price Card */}
+              <div className="rounded-3xl bg-gradient-to-br from-white to-[#f5f6fa] border border-slate-100 p-6 shadow-xl">
+                <div className="mb-6">
+                  {originalPrice && (
+                    <div className="flex items-center gap-2 mb-2">
+                      <span className="text-sm text-slate-500 line-through">{formatToman(originalPrice)}</span>
+                      <span className="rounded-full bg-rose-500 px-2 py-0.5 text-xs font-bold text-white">
+                        {discountPercent}% تخفیف
+                      </span>
+                    </div>
+                  )}
+                  <p className="text-xs text-slate-600 mb-1">قیمت</p>
+                  <p className="text-3xl sm:text-4xl font-black text-slate-900">{formatToman(currentPrice)}</p>
+                  <p className="text-sm text-rose-600 font-semibold mt-1">تومان</p>
+                </div>
+
+                {game.options.length > 0 && (
+                  <div className="space-y-4 mb-6">
+                    {game.options.map((opt) => (
+                      <div key={opt.id}>
+                        <label className="mb-2 block text-sm font-bold text-slate-700">{opt.name}</label>
+                        <select
+                          value={selectedOptions[opt.name] || ''}
+                          onChange={(e) => setSelectedOptions((prev) => ({ ...prev, [opt.name]: e.target.value }))}
+                          className="w-full rounded-xl border-2 border-rose-200 bg-white px-4 py-3 text-sm font-semibold focus:border-rose-400 focus:ring-2 focus:ring-rose-200 transition"
+                        >
+                          {opt.values.map((val) => (
+                            <option key={val} value={val}>
+                              {val}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+                    ))}
+                  </div>
+                )}
+
+                {currentVariant && currentVariant.stock <= 5 && currentVariant.stock > 0 && (
+                  <div className="mb-4 rounded-xl bg-amber-50 border border-amber-200 p-3">
+                    <p className="text-xs font-bold text-amber-800">
+                      ⚠️ فقط {currentVariant.stock} عدد باقی مانده!
+                    </p>
+                  </div>
+                )}
+
+                {currentVariant && currentVariant.stock === 0 && (
+                  <div className="mb-4 rounded-xl bg-rose-50 border border-rose-200 p-3">
+                    <p className="text-xs font-bold text-rose-800">❌ موجود نیست</p>
+                  </div>
+                )}
+
+                <div className="space-y-3">
+                  <button 
+                    onClick={async () => {
+                      try {
+                        await addToCart(game.id, 1, currentVariant?.id, selectedOptions);
+                        alert('به سبد خرید اضافه شد');
+                      } catch (err) {
+                        alert('لطفاً وارد حساب کاربری شوید');
+                      }
+                    }}
+                    disabled={currentVariant && currentVariant.stock === 0}
+                    className="w-full rounded-2xl bg-[#0a84ff] py-4 text-base font-bold text-white shadow-lg shadow-blue-400/40 transition hover:bg-[#0071e3] disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    {currentVariant && currentVariant.stock === 0 ? 'موجود نیست' : 'افزودن به سبد خرید'}
+                  </button>
+                  <button 
+                    onClick={() => {
+                      const token = getAuthToken();
+                      if (!token) {
+                        alert('لطفاً ابتدا وارد حساب کاربری خود شوید');
+                        return;
+                      }
+                      setShowPriceAlertModal(true);
+                    }}
+                    className="w-full rounded-2xl border-2 border-slate-200 bg-white px-4 py-3 text-sm font-semibold text-slate-700 hover:bg-slate-50 transition"
+                  >
+                    {existingAlert ? '✏️ ویرایش هشدار قیمت' : '🔔 تنظیم هشدار قیمت'}
+                  </button>
+                </div>
+
+                {game.safeAccountAvailable && (
+                  <div className="mt-4 rounded-xl bg-white/70 backdrop-blur p-3 border border-orange-200">
+                    <p className="text-xs font-semibold text-rose-500 flex items-center gap-2">
+                      <Icon name="shield" size={16} />
+                      Safe Account موجود است
+                    </p>
+                  </div>
+                )}
+              </div>
+
+              {/* Guarantee Card */}
+              <div className="rounded-3xl border border-slate-100 bg-gradient-to-br from-white to-[#f7f7fb] p-6 shadow-lg">
+                <p className="text-sm font-bold text-[#0a84ff] mb-3 flex items-center gap-2">
+                  <Icon name="shield" size={18} />
+                  ضمانت GameClub
+                </p>
+                <ul className="space-y-2 text-sm text-slate-700">
+                  {guarantee.map((item) => (
+                    <li key={item} className="flex items-start gap-2">
+                      <Icon name="check" size={16} className="text-rose-500 flex-shrink-0 mt-0.5" />
+                      <span>{item}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            </div>
+          </div>
+
           {/* Main Content */}
-          <div className="lg:col-span-2 space-y-8">
+          <div className="lg:col-span-2 lg:col-start-1 lg:row-start-1 space-y-8">
             {/* Tabs */}
             <div className="bg-white rounded-3xl shadow-lg border border-slate-200 overflow-hidden">
-              <div className="border-b border-slate-200 flex">
+              <div className="border-b border-slate-200 flex overflow-x-auto scrollbar-hide">
                 {[
                   { id: 'overview', label: 'بررسی', icon: 'file' },
                   { id: 'media', label: 'رسانه', icon: 'image' },
@@ -339,7 +452,7 @@ export default function GameDetailClient({ initialGame }: GameDetailClientProps)
                   <button
                     key={tab.id}
                     onClick={() => setActiveTab(tab.id as any)}
-                    className={`flex-1 flex items-center justify-center gap-2 px-6 py-4 text-sm font-bold transition ${
+                    className={`flex-1 min-w-[100px] flex items-center justify-center gap-2 px-4 py-4 text-sm font-bold transition whitespace-nowrap ${
                       activeTab === tab.id
                         ? 'bg-rose-50 text-rose-600 border-b-2 border-rose-400'
                         : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50'
@@ -351,21 +464,21 @@ export default function GameDetailClient({ initialGame }: GameDetailClientProps)
                 ))}
               </div>
 
-              <div className="p-6 md:p-8">
+              <div className="p-4 sm:p-6 md:p-8">
                 {/* Overview Tab */}
                 {activeTab === 'overview' && (
                   <div className="space-y-6">
                     {game.detailedDescription && (
                       <div 
-                        className="prose prose-slate max-w-none text-slate-700 leading-relaxed"
+                        className="prose prose-slate max-w-none text-slate-700 leading-relaxed text-sm sm:text-base"
                         dangerouslySetInnerHTML={{ __html: game.detailedDescription }}
                       />
                     )}
                     
                     {game.features && game.features.length > 0 && (
                       <div>
-                        <h3 className="text-xl font-bold text-slate-900 mb-4">ویژگی‌های بازی</h3>
-                        <div className="grid md:grid-cols-2 gap-3">
+                        <h3 className="text-lg sm:text-xl font-bold text-slate-900 mb-4">ویژگی‌های بازی</h3>
+                        <div className="grid sm:grid-cols-2 gap-3">
                           {game.features.map((feature, idx) => (
                             <div key={idx} className="flex items-center gap-3 p-3 rounded-xl bg-slate-50">
                         <Icon name="check" size={18} className="text-rose-500 flex-shrink-0" />
@@ -377,15 +490,15 @@ export default function GameDetailClient({ initialGame }: GameDetailClientProps)
                     )}
 
                     {/* Activation Steps */}
-                  <div className="rounded-2xl bg-gradient-to-br from-[#f7f8fb] to-white p-6 border border-slate-100">
-                    <h3 className="text-xl font-bold text-slate-800 mb-4">مراحل فعال‌سازی</h3>
+                  <div className="rounded-2xl bg-gradient-to-br from-[#f7f8fb] to-white p-4 sm:p-6 border border-slate-100">
+                    <h3 className="text-lg sm:text-xl font-bold text-slate-800 mb-4">مراحل فعال‌سازی</h3>
                       <ol className="space-y-4">
                         {activationSteps.map((step, index) => (
                           <li key={step} className="flex items-start gap-4">
-                          <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#0a84ff] font-bold text-white flex-shrink-0 shadow-lg">
+                          <span className="flex h-8 w-8 sm:h-10 sm:w-10 items-center justify-center rounded-xl bg-[#0a84ff] font-bold text-white flex-shrink-0 shadow-lg text-sm sm:text-base">
                               {index + 1}
                             </span>
-                          <span className="text-sm text-rose-600 leading-relaxed pt-2">{step}</span>
+                          <span className="text-sm text-rose-600 leading-relaxed pt-1.5 sm:pt-2">{step}</span>
                           </li>
                         ))}
                       </ol>
@@ -574,118 +687,6 @@ export default function GameDetailClient({ initialGame }: GameDetailClientProps)
               </div>
             </div>
 
-          </div>
-
-          {/* Sidebar - Purchase Card */}
-          <div className="lg:col-span-1">
-            <div className="sticky top-8 space-y-6">
-              {/* Price Card */}
-              <div className="rounded-3xl bg-gradient-to-br from-white to-[#f5f6fa] border border-slate-100 p-6 shadow-xl">
-                <div className="mb-6">
-                  {originalPrice && (
-                    <div className="flex items-center gap-2 mb-2">
-                      <span className="text-sm text-slate-500 line-through">{formatToman(originalPrice)}</span>
-                      <span className="rounded-full bg-rose-500 px-2 py-0.5 text-xs font-bold text-white">
-                        {discountPercent}% تخفیف
-                      </span>
-                    </div>
-                  )}
-                  <p className="text-xs text-slate-600 mb-1">قیمت</p>
-                  <p className="text-4xl font-black text-slate-900">{formatToman(currentPrice)}</p>
-                  <p className="text-sm text-rose-600 font-semibold mt-1">تومان</p>
-                </div>
-
-                {game.options.length > 0 && (
-                  <div className="space-y-4 mb-6">
-                    {game.options.map((opt) => (
-                      <div key={opt.id}>
-                        <label className="mb-2 block text-sm font-bold text-slate-700">{opt.name}</label>
-                        <select
-                          value={selectedOptions[opt.name] || ''}
-                          onChange={(e) => setSelectedOptions((prev) => ({ ...prev, [opt.name]: e.target.value }))}
-                          className="w-full rounded-xl border-2 border-rose-200 bg-white px-4 py-3 text-sm font-semibold focus:border-rose-400 focus:ring-2 focus:ring-rose-200 transition"
-                        >
-                          {opt.values.map((val) => (
-                            <option key={val} value={val}>
-                              {val}
-                            </option>
-                          ))}
-                        </select>
-                      </div>
-                    ))}
-                  </div>
-                )}
-
-                {currentVariant && currentVariant.stock <= 5 && currentVariant.stock > 0 && (
-                  <div className="mb-4 rounded-xl bg-amber-50 border border-amber-200 p-3">
-                    <p className="text-xs font-bold text-amber-800">
-                      ⚠️ فقط {currentVariant.stock} عدد باقی مانده!
-                    </p>
-                  </div>
-                )}
-
-                {currentVariant && currentVariant.stock === 0 && (
-                  <div className="mb-4 rounded-xl bg-rose-50 border border-rose-200 p-3">
-                    <p className="text-xs font-bold text-rose-800">❌ موجود نیست</p>
-                  </div>
-                )}
-
-                <div className="space-y-3">
-                  <button 
-                    onClick={async () => {
-                      try {
-                        await addToCart(game.id, 1, currentVariant?.id, selectedOptions);
-                        alert('به سبد خرید اضافه شد');
-                      } catch (err) {
-                        alert('لطفاً وارد حساب کاربری شوید');
-                      }
-                    }}
-                    disabled={currentVariant && currentVariant.stock === 0}
-                    className="w-full rounded-2xl bg-[#0a84ff] py-4 text-base font-bold text-white shadow-lg shadow-blue-400/40 transition hover:bg-[#0071e3] disabled:opacity-50 disabled:cursor-not-allowed"
-                  >
-                    {currentVariant && currentVariant.stock === 0 ? 'موجود نیست' : 'افزودن به سبد خرید'}
-                  </button>
-                  <button 
-                    onClick={() => {
-                      const token = getAuthToken();
-                      if (!token) {
-                        alert('لطفاً ابتدا وارد حساب کاربری خود شوید');
-                        return;
-                      }
-                      setShowPriceAlertModal(true);
-                    }}
-                    className="w-full rounded-2xl border-2 border-slate-200 bg-white px-4 py-3 text-sm font-semibold text-slate-700 hover:bg-slate-50 transition"
-                  >
-                    {existingAlert ? '✏️ ویرایش هشدار قیمت' : '🔔 تنظیم هشدار قیمت'}
-                  </button>
-                </div>
-
-                {game.safeAccountAvailable && (
-                  <div className="mt-4 rounded-xl bg-white/70 backdrop-blur p-3 border border-orange-200">
-                    <p className="text-xs font-semibold text-rose-500 flex items-center gap-2">
-                      <Icon name="shield" size={16} />
-                      Safe Account موجود است
-                    </p>
-                  </div>
-                )}
-              </div>
-
-              {/* Guarantee Card */}
-              <div className="rounded-3xl border border-slate-100 bg-gradient-to-br from-white to-[#f7f7fb] p-6 shadow-lg">
-                <p className="text-sm font-bold text-[#0a84ff] mb-3 flex items-center gap-2">
-                  <Icon name="shield" size={18} />
-                  ضمانت GameClub
-                </p>
-                <ul className="space-y-2 text-sm text-slate-700">
-                  {guarantee.map((item) => (
-                    <li key={item} className="flex items-start gap-2">
-                      <Icon name="check" size={16} className="text-rose-500 flex-shrink-0 mt-0.5" />
-                      <span>{item}</span>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            </div>
           </div>
         </div>
 
