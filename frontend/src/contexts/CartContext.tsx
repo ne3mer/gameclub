@@ -36,7 +36,6 @@ type CartContextType = {
   loading: boolean;
   error: string;
   itemCount: number;
-  itemCount: number;
   totalPrice: number;
   shippingCost: number;
   finalTotal: number;

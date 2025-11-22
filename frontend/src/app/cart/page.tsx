@@ -6,7 +6,7 @@ import { useCart } from '@/contexts/CartContext';
 import { formatToman } from '@/lib/format';
 
 export default function CartPage() {
-  const { cart, loading, updateQuantity, removeFromCart, totalPrice } = useCart();
+  const { cart, loading, updateQuantity, removeFromCart, totalPrice, shippingCost, finalTotal } = useCart();
 
   if (loading && !cart) {
     return (
@@ -123,11 +123,15 @@ export default function CartPage() {
                 <span>تخفیف</span>
                 <span className="text-emerald-600">0 تومان</span>
               </div>
+              <div className="flex justify-between text-sm text-slate-600">
+                <span>هزینه ارسال</span>
+                <span>{shippingCost > 0 ? `${formatToman(shippingCost)} تومان` : 'رایگان'}</span>
+              </div>
             </div>
 
             <div className="mt-4 flex justify-between text-lg font-black text-slate-900">
               <span>مبلغ قابل پرداخت</span>
-              <span>{formatToman(totalPrice)} تومان</span>
+              <span>{formatToman(finalTotal)} تومان</span>
             </div>
 
             <Link
