@@ -205,24 +205,24 @@ export default function AdminDashboard() {
   return (
     <div className="space-y-8">
       {/* Header */}
-      <header className="flex items-center justify-between">
+      <header className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-0">
         <div>
-          <h1 className="text-3xl font-black text-slate-900">داشبورد مدیریت</h1>
+          <h1 className="text-2xl md:text-3xl font-black text-slate-900">داشبورد مدیریت</h1>
           <p className="text-sm text-slate-500 mt-1">خلاصه عملکرد و آمار سیستم</p>
         </div>
-        <div className="flex gap-3">
+        <div className="flex gap-2 sm:gap-3">
           <button
             onClick={() => window.location.reload()}
-            className="flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm font-bold text-slate-700 hover:bg-slate-50 transition"
+            className="flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-3 py-2 sm:px-4 text-sm font-bold text-slate-700 hover:bg-slate-50 transition active:bg-slate-100"
           >
             <Icon name="refresh" size={16} />
-            بروزرسانی
+            <span className="hidden sm:inline">بروزرسانی</span>
           </button>
         </div>
       </header>
 
       {/* Stats Grid */}
-      <section className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+      <section className="grid gap-3 sm:gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
         <StatCard
           label="سفارشات امروز"
           value={stats.ordersToday}
@@ -254,7 +254,7 @@ export default function AdminDashboard() {
       </section>
 
       {/* Secondary Stats */}
-      <section className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+      <section className="grid gap-3 sm:gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
         <StatCard
           label="سفارشات پرداخت شده"
           value={stats.paidOrders}
@@ -291,14 +291,14 @@ export default function AdminDashboard() {
       <div className="grid gap-6 lg:grid-cols-3">
         {/* Recent Orders */}
         <section className="lg:col-span-2 rounded-3xl border border-slate-100 bg-white p-6 shadow-sm">
-          <div className="flex items-center justify-between mb-6">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-0 mb-4 sm:mb-6">
             <div>
-              <h2 className="text-lg font-bold text-slate-900">آخرین سفارشات</h2>
+              <h2 className="text-base sm:text-lg font-bold text-slate-900">آخرین سفارشات</h2>
               <p className="text-xs text-slate-500 mt-1">۵ سفارش اخیر</p>
             </div>
             <Link
               href="/admin/orders"
-              className="flex items-center gap-1 text-xs font-bold text-emerald-600 hover:text-emerald-700 transition"
+              className="flex items-center gap-1 text-xs font-bold text-emerald-600 hover:text-emerald-700 transition self-start sm:self-auto"
             >
               مشاهده همه
               <Icon name="arrow-right" size={14} />
@@ -322,11 +322,11 @@ export default function AdminDashboard() {
                 <Link
                   key={order.id}
                   href={`/admin/orders?order=${order.id}`}
-                  className="block rounded-2xl border border-slate-100 p-4 hover:border-emerald-200 hover:bg-emerald-50/30 transition group"
+                  className="block rounded-2xl border border-slate-100 p-3 sm:p-4 hover:border-emerald-200 hover:bg-emerald-50/30 transition group"
                 >
-                  <div className="flex items-center justify-between">
-                    <div className="flex-1">
-                      <div className="flex items-center gap-3">
+                  <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 sm:gap-0">
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2 sm:gap-3 flex-wrap">
                         <p className="text-sm font-bold text-slate-900 group-hover:text-emerald-600 transition">
                           سفارش {order.orderNumber}
                         </p>
@@ -346,11 +346,11 @@ export default function AdminDashboard() {
                             : 'در انتظار'}
                         </span>
                       </div>
-                      <p className="text-xs text-slate-500 mt-1">
+                      <p className="text-xs text-slate-500 mt-1 truncate">
                         {order.customerInfo.name || order.customerInfo.email} • {formatDate(order.createdAt)}
                       </p>
                     </div>
-                    <div className="text-left">
+                    <div className="text-right sm:text-left self-end sm:self-auto">
                       <p className="text-sm font-black text-slate-900">
                         {formatToman(order.totalAmount)}
                       </p>
@@ -365,14 +365,14 @@ export default function AdminDashboard() {
 
         {/* Top Products */}
         <section className="rounded-3xl border border-slate-100 bg-white p-6 shadow-sm">
-          <div className="flex items-center justify-between mb-6">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-0 mb-4 sm:mb-6">
             <div>
-              <h2 className="text-lg font-bold text-slate-900">پرفروش‌ترین‌ها</h2>
+              <h2 className="text-base sm:text-lg font-bold text-slate-900">پرفروش‌ترین‌ها</h2>
               <p className="text-xs text-slate-500 mt-1">۵ محصول برتر</p>
             </div>
             <Link
               href="/admin/products"
-              className="flex items-center gap-1 text-xs font-bold text-emerald-600 hover:text-emerald-700 transition"
+              className="flex items-center gap-1 text-xs font-bold text-emerald-600 hover:text-emerald-700 transition self-start sm:self-auto"
             >
               همه
               <Icon name="arrow-right" size={14} />
@@ -414,11 +414,11 @@ export default function AdminDashboard() {
 
       {/* Quick Actions */}
       <section className="rounded-3xl border border-slate-200 bg-gradient-to-br from-emerald-50 via-white to-blue-50 p-6 shadow-lg">
-        <h2 className="text-xl font-black text-slate-900 mb-6 flex items-center gap-2">
-          <Icon name="zap" size={24} className="text-emerald-600" />
+        <h2 className="text-lg sm:text-xl font-black text-slate-900 mb-4 sm:mb-6 flex items-center gap-2">
+          <Icon name="zap" size={20} className="text-emerald-600 sm:w-6 sm:h-6" />
           دسترسی سریع
         </h2>
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        <div className="grid gap-3 sm:gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
           <Link
             href="/admin/products/new"
             className="flex items-center gap-3 rounded-2xl border-2 border-emerald-200 bg-gradient-to-br from-white to-emerald-50/50 p-5 hover:border-emerald-300 hover:shadow-lg hover:scale-105 transition-all duration-200 group"

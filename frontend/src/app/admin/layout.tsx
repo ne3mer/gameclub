@@ -143,7 +143,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
       {/* Sidebar */}
       <aside
-        className={`fixed inset-y-0 right-0 z-50 w-72 transform border-l border-slate-200 bg-gradient-to-b from-slate-50 to-white shadow-2xl transition-transform duration-300 md:relative md:translate-x-0 ${
+        className={`fixed inset-y-0 right-0 z-50 w-full md:w-72 transform border-l border-slate-200 bg-gradient-to-b from-slate-50 to-white shadow-2xl transition-transform duration-300 md:relative md:translate-x-0 ${
           sidebarOpen ? 'translate-x-0' : 'translate-x-full md:translate-x-0'
         }`}
       >
@@ -229,28 +229,29 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       {/* Main Content */}
       <main className="flex-1 flex flex-col min-w-0">
         {/* Top Bar */}
-        <header className="sticky top-0 z-30 border-b border-slate-200 bg-white/90 backdrop-blur-md shadow-sm px-4 py-4 md:px-8">
-          <div className="flex items-center justify-between">
+        <header className="sticky top-0 z-30 border-b border-slate-200 bg-white/90 backdrop-blur-md shadow-sm px-3 py-3 md:px-8 md:py-4">
+          <div className="flex items-center justify-between gap-2">
             <button
               onClick={() => setSidebarOpen(true)}
-              className="md:hidden rounded-xl p-2 hover:bg-slate-100 transition text-slate-600"
+              className="md:hidden rounded-xl p-2.5 hover:bg-slate-100 transition text-slate-600 active:bg-slate-200"
+              aria-label="باز کردن منو"
             >
               <Icon name="menu" size={24} />
             </button>
-            <div className="flex items-center gap-6">
+            <div className="flex items-center gap-2 md:gap-6 flex-1 justify-end md:justify-start">
               <div className="hidden md:flex items-center gap-2 text-sm text-slate-600 bg-emerald-50 px-4 py-2 rounded-full">
                 <span className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse"></span>
                 <span className="font-semibold">آنلاین</span>
               </div>
-              <div className="text-sm text-slate-600 font-medium bg-slate-50 px-4 py-2 rounded-full">
-                {new Date().toLocaleDateString('fa-IR', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
+              <div className="text-xs md:text-sm text-slate-600 font-medium bg-slate-50 px-2 py-1.5 md:px-4 md:py-2 rounded-full truncate max-w-[200px] md:max-w-none">
+                {new Date().toLocaleDateString('fa-IR', { weekday: 'short', month: 'short', day: 'numeric' })}
               </div>
             </div>
           </div>
         </header>
 
         {/* Content */}
-        <div className="flex-1 overflow-y-auto p-4 md:p-8">
+        <div className="flex-1 overflow-y-auto p-3 sm:p-4 md:p-6 lg:p-8">
           {children}
         </div>
       </main>
