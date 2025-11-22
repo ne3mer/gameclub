@@ -10,8 +10,8 @@ import { Icon } from '@/components/icons/Icon';
 const links = [
   { href: '/', label: 'خانه', icon: 'home' },
   { href: '/games', label: 'کاتالوگ بازی', icon: 'gamepad' },
+  { href: '/categories', label: 'دسته‌بندی‌ها', icon: 'grid', hasDropdown: true },
   { href: '/arena', label: 'آرنا', icon: 'trophy' },
-  { href: '/account#track', label: 'پیگیری سفارش', icon: 'package' },
   { href: '/about', label: 'درباره ما', icon: 'users' },
   { href: '/policies', label: 'قوانین', icon: 'file' }
 ];
@@ -21,6 +21,8 @@ export const MainNav = () => {
   const [showAdminLink, setShowAdminLink] = useState(false);
   const [unreadNotifications, setUnreadNotifications] = useState(0);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [categories, setCategories] = useState<any[]>([]);
+  const [showCategoriesDropdown, setShowCategoriesDropdown] = useState(false);
 
   const syncUserFromStorage = useCallback(() => {
     if (typeof window === 'undefined') return;
@@ -64,9 +66,22 @@ export const MainNav = () => {
     }
   };
 
+  const fetchCategories = async () => {
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/categories?active=true`);
+      if (response.ok) {
+        const data = await response.json();
+        setCategories(Array.isArray(data?.data) ? data.data.slice(0, 6) : []);
+      }
+    } catch (err) {
+      // Silent fail
+    }
+  };
+
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect
     syncUserFromStorage();
+    fetchCategories();
 
     const handleAuthChange = () => syncUserFromStorage();
     window.addEventListener('gc-auth-change', handleAuthChange);
@@ -116,13 +131,52 @@ export const MainNav = () => {
           {/* Desktop Navigation */}
           <div className="hidden items-center gap-1 md:flex">
             {links.map((link) => (
-              <Link
-                key={link.href}
-                href={link.href}
-                className="group flex items-center gap-2 rounded-2xl px-4 py-2 text-sm font-semibold text-slate-600 transition hover:bg-slate-50 hover:text-slate-900"
-              >
-                <span>{link.label}</span>
-              </Link>
+              link.hasDropdown ? (
+                <div key={link.href} className="relative">
+                  <button
+                    type="button"
+                    onMouseEnter={() => setShowCategoriesDropdown(true)}
+                    onMouseLeave={() => setShowCategoriesDropdown(false)}
+                    className="group flex items-center gap-2 rounded-2xl px-4 py-2 text-sm font-semibold text-slate-600 transition hover:bg-slate-50 hover:text-slate-900"
+                  >
+                    <span>{link.label}</span>
+                    <Icon name="chevron-down" size={14} className={`transition-transform ${showCategoriesDropdown ? 'rotate-180' : ''}`} />
+                  </button>
+                  {showCategoriesDropdown && (
+                    <div 
+                      onMouseEnter={() => setShowCategoriesDropdown(true)}
+                      onMouseLeave={() => setShowCategoriesDropdown(false)}
+                      className="absolute right-0 top-full mt-2 w-64 rounded-2xl border border-slate-100 bg-white p-2 shadow-xl"
+                    >
+                      {categories.map((cat) => (
+                        <Link
+                          key={cat._id || cat.id}
+                          href={`/categories/${cat.slug}`}
+                          className="flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-semibold text-slate-600 transition hover:bg-emerald-50 hover:text-emerald-600"
+                        >
+                          <span className="text-lg">{cat.icon || '🎮'}</span>
+                          <span>{cat.name}</span>
+                        </Link>
+                      ))}
+                      <Link
+                        href="/categories"
+                        className="mt-2 flex items-center justify-center gap-2 rounded-xl border-t border-slate-100 px-4 py-3 text-xs font-bold text-emerald-600 transition hover:bg-emerald-50"
+                      >
+                        <span>مشاهده همه</span>
+                        <Icon name="arrow-left" size={12} />
+                      </Link>
+                    </div>
+                  )}
+                </div>
+              ) : (
+                <Link
+                  key={link.href}
+                  href={link.href}
+                  className="group flex items-center gap-2 rounded-2xl px-4 py-2 text-sm font-semibold text-slate-600 transition hover:bg-slate-50 hover:text-slate-900"
+                >
+                  <span>{link.label}</span>
+                </Link>
+              )
             ))}
             {showAdminLink && (
               <Link
