@@ -117,7 +117,7 @@ export const defaultHomeContent: HomeContent = {
       id: 'cta-3',
       title: 'پشتیبانی تخصصی PS5',
       description: 'تیم فارسی‌زبان برای نصب، فعال‌سازی و رفع مسدودیت کنار شماست.',
-      href: '/support',
+      href: '/account',
       accent: 'slate'
     }
   ],
