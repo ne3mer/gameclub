@@ -8,7 +8,7 @@ const steps = [
     number: 1,
     title: 'ثبت‌نام کنید',
     description: 'یک حساب کاربری رایگان بسازید و پروفایل خود را تکمیل کنید',
-    icon: 'user-plus',
+    icon: 'user',
     color: 'from-purple-500 to-pink-500'
   },
   {
@@ -29,7 +29,7 @@ const steps = [
     number: 4,
     title: 'بازی کنید',
     description: 'در زمان مقرر وارد لابی شوید و با حریفان خود رقابت کنید',
-    icon: 'gamepad',
+    icon: 'game',
     color: 'from-orange-500 to-red-500'
   },
   {
@@ -43,7 +43,7 @@ const steps = [
     number: 6,
     title: 'جایزه بگیرید',
     description: 'در صورت برنده شدن، جایزه نقدی خود را دریافت کنید',
-    icon: 'trophy',
+    icon: 'award',
     color: 'from-yellow-500 to-amber-500'
   }
 ];
