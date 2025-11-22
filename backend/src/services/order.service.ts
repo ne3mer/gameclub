@@ -25,6 +25,8 @@ interface CreateOrderInput {
   totalAmount: number;
   couponCode?: string;
   discountAmount?: number;
+  note?: string;
+  paymentMethod?: string;
 }
 
 export const createOrder = async (
@@ -44,6 +46,8 @@ export const createOrder = async (
     totalAmount: input.totalAmount,
     paymentStatus: "pending",
     fulfillmentStatus: "pending",
+    note: input.note,
+    paymentMethod: input.paymentMethod || 'online',
   };
 
   if (input.couponCode) {
@@ -126,6 +130,8 @@ export const createOrder = async (
     totalAmount: order.totalAmount,
     paymentStatus: order.paymentStatus,
     fulfillmentStatus: order.fulfillmentStatus,
+    note: order.note,
+    paymentMethod: order.paymentMethod,
     customer: {
       name: resolvedCustomerName,
       email: order.customerInfo.email,
@@ -412,4 +418,34 @@ export const acknowledgeOrderDelivery = async (
     },
     { new: true }
   );
+};
+
+export const updateOrderItemWarranty = async (
+  orderId: string,
+  itemId: string,
+  warrantyData: {
+    status: 'active' | 'expired' | 'voided';
+    startDate?: Date;
+    endDate?: Date;
+    description?: string;
+  }
+) => {
+  const order = await OrderModel.findById(orderId);
+  if (!order) return null;
+
+  const item = order.items.find(
+    (i) => (i as any)._id?.toString() === itemId || (i as any).id === itemId
+  );
+
+  if (!item) return null;
+
+  item.warranty = {
+    status: warrantyData.status,
+    startDate: warrantyData.startDate,
+    endDate: warrantyData.endDate,
+    description: warrantyData.description
+  };
+
+  await order.save();
+  return order;
 };

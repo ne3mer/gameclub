@@ -49,3 +49,25 @@ export const deleteUser = async (req: Request, res: Response) => {
   res.status(204).send();
 };
 
+export const sendUserMessage = async (req: Request, res: Response) => {
+  const { subject, message, userIds, role, sendToAll, channel } = req.body;
+  const result = await userService.sendAdminMessage({
+    subject,
+    message,
+    userIds,
+    role,
+    sendToAll,
+    channel
+  });
+
+  res.json({
+    message: `پیام برای ${result.sent} کاربر ارسال شد`,
+    data: result
+  });
+};
+
+export const getUserInsights = async (req: Request, res: Response) => {
+  const { id } = req.params;
+  const data = await userService.getUserInsights(id);
+  res.json({ data });
+};

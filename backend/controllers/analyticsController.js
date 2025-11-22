@@ -1,5 +1,6 @@
 const Analytics = require('../models/Analytics');
 const crypto = require('crypto');
+const jwt = require('jsonwebtoken');
 
 // Helper function to hash IP address for privacy
 const hashIP = (ip) => {
@@ -43,6 +44,34 @@ const getBrowserAndOS = (userAgent) => {
   return { browser, os };
 };
 
+const getAuthenticatedUser = (req) => {
+  if (req.user?._id) {
+    return {
+      id: req.user._id.toString(),
+      email: req.user.email,
+      role: req.user.role
+    };
+  }
+
+  const authHeader = req.headers.authorization;
+  if (!authHeader || !authHeader.startsWith('Bearer ')) {
+    return null;
+  }
+
+  try {
+    const token = authHeader.substring(7);
+    const decoded = jwt.verify(token, process.env.JWT_SECRET || 'super-secret-key-change-in-production');
+    if (!decoded) return null;
+    return {
+      id: (decoded.id || decoded.sub)?.toString?.() ?? decoded.id ?? decoded.sub,
+      email: decoded.email,
+      role: decoded.role
+    };
+  } catch (error) {
+    return null;
+  }
+};
+
 // Track page view
 exports.trackPageView = async (req, res) => {
   try {
@@ -68,6 +97,8 @@ exports.trackPageView = async (req, res) => {
     const ip = req.ip || req.connection.remoteAddress;
     const { browser, os } = getBrowserAndOS(userAgent);
 
+    const authUser = getAuthenticatedUser(req);
+
     const analytics = new Analytics({
       type: 'pageview',
       url,
@@ -75,8 +106,8 @@ exports.trackPageView = async (req, res) => {
       title,
       referrer,
       sessionId,
-      userId: req.user?._id,
-      isAuthenticated: !!req.user,
+      userId: authUser?.id || req.user?._id,
+      isAuthenticated: Boolean(authUser || req.user),
       userAgent,
       deviceType: getDeviceType(userAgent),
       browser,
@@ -126,6 +157,8 @@ exports.trackClick = async (req, res) => {
     const ip = req.ip || req.connection.remoteAddress;
     const { browser, os } = getBrowserAndOS(userAgent);
 
+    const authUser = getAuthenticatedUser(req);
+
     const analytics = new Analytics({
       type: 'click',
       url,
@@ -135,8 +168,8 @@ exports.trackClick = async (req, res) => {
       elementText,
       elementClass,
       sessionId,
-      userId: req.user?._id,
-      isAuthenticated: !!req.user,
+      userId: authUser?.id || req.user?._id,
+      isAuthenticated: Boolean(authUser || req.user),
       userAgent,
       deviceType: getDeviceType(userAgent),
       browser,
@@ -181,6 +214,8 @@ exports.trackEvent = async (req, res) => {
     const ip = req.ip || req.connection.remoteAddress;
     const { browser, os } = getBrowserAndOS(userAgent);
 
+    const authUser = getAuthenticatedUser(req);
+
     const analytics = new Analytics({
       type: 'event',
       url,
@@ -188,8 +223,8 @@ exports.trackEvent = async (req, res) => {
       eventName,
       eventData,
       sessionId,
-      userId: req.user?._id,
-      isAuthenticated: !!req.user,
+      userId: authUser?.id || req.user?._id,
+      isAuthenticated: Boolean(authUser || req.user),
       userAgent,
       deviceType: getDeviceType(userAgent),
       browser,

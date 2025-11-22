@@ -15,6 +15,8 @@ type OrderCreatedEvent = {
   totalAmount: number;
   paymentStatus: PaymentStatus;
   fulfillmentStatus: FulfillmentStatus;
+  note?: string;
+  paymentMethod?: string;
   customer: {
     name?: string | null;
     email: string;
@@ -150,13 +152,14 @@ const buildEmailContent = (event: AdminNotificationEvent) => {
         )
         .join('');
 
-      const summary = renderKeyValueList([
+      const summaryRows: Array<[string, string]> = [
         ['شماره سفارش', escapeHtml(event.orderNumber)],
         [
           'مبلغ کل',
           `${formatCurrency(event.totalAmount)} <span style="color:#6b7280;">تومان</span>`
         ],
         ['وضعیت پرداخت', escapeHtml(event.paymentStatus)],
+        ['روش پرداخت', event.paymentMethod === 'wallet' ? 'کیف پول' : 'درگاه اینترنتی'],
         ['وضعیت تحویل', escapeHtml(event.fulfillmentStatus)],
         [
           'نام مشتری',
@@ -165,7 +168,18 @@ const buildEmailContent = (event: AdminNotificationEvent) => {
         ['ایمیل مشتری', escapeHtml(event.customer.email)],
         ['شماره تماس', escapeHtml(event.customer.phone ?? '---')],
         ['تاریخ ایجاد', formatDate(event.createdAt)]
-      ]);
+      ];
+
+      const summary = renderKeyValueList(summaryRows);
+
+      const noteSection = event.note
+        ? section(
+            'توضیحات مشتری',
+            `<div style="padding:12px;border-radius:16px;background:#fff7ed;border:1px solid #ffedd5;color:#9a3412;">${formatMultiline(
+              event.note
+            )}</div>`
+          )
+        : '';
 
       const body = `
         ${section(
@@ -173,6 +187,7 @@ const buildEmailContent = (event: AdminNotificationEvent) => {
           '<p style="margin:0;color:#374151;">لطفاً سفارش جدید را در پنل مدیریت بررسی کنید.</p>'
         )}
         ${section('جزئیات سفارش', summary)}
+        ${noteSection}
         ${section(
           'اقلام سفارش',
           `<ul style="padding-right:18px;margin:0;color:#111827;">${itemsHtml}</ul>`

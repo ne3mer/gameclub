@@ -9,6 +9,12 @@ interface OrderItem {
   selectedOptions?: Map<string, string>;
   pricePaid: number;
   quantity: number;
+  warranty?: {
+    status: 'active' | 'expired' | 'voided';
+    startDate?: Date;
+    endDate?: Date;
+    description?: string;
+  };
 }
 
 interface CustomerInfo {
@@ -21,10 +27,12 @@ export interface OrderDocument extends Document {
   userId?: Types.ObjectId;
   orderNumber: string;
   customerInfo: CustomerInfo;
+  note?: string; // Customer note
   items: OrderItem[];
   totalAmount: number;
   couponCode?: string; // Applied coupon code
   discountAmount?: number; // Discount amount applied
+  paymentMethod?: string; // 'online' | 'wallet'
   paymentStatus: PaymentStatus;
   paymentReference?: string; // ZarinPal Authority
   fulfillmentStatus: FulfillmentStatus;
@@ -61,18 +69,26 @@ const orderSchema = new Schema<OrderDocument>(
       email: { type: String, required: true },
       phone: { type: String, required: true }
     },
+    note: { type: String },
     items: [
       {
         gameId: { type: Schema.Types.ObjectId, ref: 'Game', required: true },
         variantId: { type: String },
         selectedOptions: { type: Map, of: String },
         pricePaid: { type: Number, required: true },
-        quantity: { type: Number, required: true, default: 1 }
+        quantity: { type: Number, required: true, default: 1 },
+        warranty: {
+          status: { type: String, enum: ['active', 'expired', 'voided'], default: 'active' },
+          startDate: { type: Date },
+          endDate: { type: Date },
+          description: { type: String }
+        }
       }
     ],
     totalAmount: { type: Number, required: true },
     couponCode: { type: String },
     discountAmount: { type: Number },
+    paymentMethod: { type: String, default: 'online' },
     paymentStatus: { type: String, enum: ['pending', 'paid', 'failed'], default: 'pending' },
     paymentReference: { type: String },
     fulfillmentStatus: { type: String, enum: ['pending', 'assigned', 'delivered', 'refunded'], default: 'pending' },

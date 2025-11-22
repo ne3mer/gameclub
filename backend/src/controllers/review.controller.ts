@@ -68,7 +68,7 @@ export const getReviewsController = [
   validateResource(getReviewsSchema),
   async (req: Request, res: Response) => {
     try {
-      const result = await getReviews(req.query);
+      const result = await getReviews(req.query as any);
       res.json({
         success: true,
         data: result.reviews,

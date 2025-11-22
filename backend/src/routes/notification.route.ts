@@ -2,6 +2,7 @@ import { Router } from 'express';
 import { asyncHandler } from '../utils/asyncHandler';
 import { validateResource } from '../middleware/validateResource';
 import { authenticateUser } from '../middleware/authenticateUser';
+import { adminAuth } from '../middleware/adminAuth';
 import * as notificationController from '../controllers/notification.controller';
 import {
   getUserNotificationsSchema,
@@ -21,6 +22,9 @@ router.get('/unread-count', validateResource(getUnreadCountSchema), asyncHandler
 router.patch('/:id/read', validateResource(markAsReadSchema), asyncHandler(notificationController.markAsRead));
 router.patch('/read-all', validateResource(markAllAsReadSchema), asyncHandler(notificationController.markAllAsRead));
 router.delete('/:id', validateResource(deleteNotificationSchema), asyncHandler(notificationController.deleteNotification));
+
+// Admin Routes
+router.post('/send', adminAuth, asyncHandler(notificationController.sendAdminNotification));
 
 export default router;
 

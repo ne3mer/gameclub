@@ -2,10 +2,11 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { AdminGuard } from '@/components/admin/AdminGuard';
 import { Icon } from '@/components/icons/Icon';
-import { X, Menu } from 'lucide-react';
+import { API_BASE_URL, ADMIN_API_KEY, adminHeaders } from '@/lib/api';
+import { getAuthToken } from '@/lib/auth';
 
 type NavGroup = {
   title?: string;
@@ -15,6 +16,78 @@ type NavGroup = {
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [sectionCounts, setSectionCounts] = useState({
+    orders: 0,
+    requests: 0,
+    reviews: 0
+  });
+
+  useEffect(() => {
+    let isMounted = true;
+
+    const fetchCounts = async () => {
+      const token = getAuthToken();
+      const headers = adminHeaders(false, token ? { Authorization: `Bearer ${token}` } : undefined);
+      const nextCounts = { orders: 0, requests: 0, reviews: 0 };
+
+      if (ADMIN_API_KEY) {
+        try {
+          const response = await fetch(
+            `${API_BASE_URL}/api/orders/admin?paymentStatus=pending&limit=1`,
+            { headers }
+          );
+          if (response.ok) {
+            const payload = await response.json().catch(() => null);
+            nextCounts.orders = payload?.meta?.total ?? 0;
+          }
+        } catch (error) {
+          console.warn('Failed to fetch pending orders count', error);
+        }
+      }
+
+      if (token) {
+        try {
+          const response = await fetch(`${API_BASE_URL}/api/game-requests/all`, {
+            headers
+          });
+          if (response.ok) {
+            const payload = await response.json().catch(() => null);
+            nextCounts.requests = payload?.statistics?.pending ?? 0;
+          }
+        } catch (error) {
+          console.warn('Failed to fetch game request stats', error);
+        }
+
+        try {
+          const response = await fetch(`${API_BASE_URL}/api/reviews/admin/stats`, {
+            headers
+          });
+          if (response.ok) {
+            const payload = await response.json().catch(() => null);
+            const stats = payload?.data ?? payload;
+            nextCounts.reviews = stats?.pending ?? 0;
+          }
+        } catch (error) {
+          console.warn('Failed to fetch review stats', error);
+        }
+      }
+
+      if (isMounted) {
+        setSectionCounts(nextCounts);
+      }
+    };
+
+    fetchCounts();
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
+  const formatBadge = (value?: number) => {
+    if (!value || value <= 0) return undefined;
+    return value > 99 ? '۹۹+' : value.toLocaleString('fa-IR');
+  };
 
   const navGroups: NavGroup[] = [
     {
@@ -27,10 +100,10 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       items: [
         { href: '/admin/products', label: 'محصولات', icon: 'game' },
         { href: '/admin/categories', label: 'دسته‌بندی‌ها', icon: 'layers' },
-        { href: '/admin/orders', label: 'سفارشات', icon: 'package' },
-        { href: '/admin/requests', label: 'درخواست‌های بازی', icon: 'message' },
+        { href: '/admin/orders', label: 'سفارشات', icon: 'package', badge: formatBadge(sectionCounts.orders) },
+        { href: '/admin/requests', label: 'درخواست‌های بازی', icon: 'message', badge: formatBadge(sectionCounts.requests) },
         { href: '/admin/users', label: 'کاربران', icon: 'users' },
-        { href: '/admin/reviews', label: 'نظرات', icon: 'star' },
+        { href: '/admin/reviews', label: 'نظرات', icon: 'star', badge: formatBadge(sectionCounts.reviews) },
         { href: '/admin/analytics', label: 'آنالیتیکس فروش', icon: 'chart' },
         { href: '/admin/pageviews', label: 'آمار بازدید', icon: 'eye' }
       ]
@@ -40,6 +113,12 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       items: [
         { href: '/admin/home', label: 'صفحه اصلی', icon: 'home' },
         { href: '/admin/banners', label: 'بنرها', icon: 'palette' }
+      ]
+    },
+    {
+      title: 'آرنا و تورنمنت‌ها',
+      items: [
+        { href: '/admin/arena/tournaments', label: 'مدیریت تورنمنت‌ها', icon: 'award' }
       ]
     },
     {

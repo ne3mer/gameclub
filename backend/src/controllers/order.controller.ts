@@ -5,7 +5,7 @@ import * as orderService from '../services/order.service';
 import type { AdminOrderFilters } from '../services/order.service';
 
 export const createOrder = async (req: Request, res: Response) => {
-  const { customerInfo, items, totalAmount, couponCode, discountAmount } = req.body;
+  const { customerInfo, items, totalAmount, couponCode, discountAmount, note, paymentMethod } = req.body;
   let userId = (req as any).user?.id as string | undefined;
 
   if (!userId) {
@@ -28,7 +28,9 @@ export const createOrder = async (req: Request, res: Response) => {
       items,
       totalAmount,
       couponCode,
-      discountAmount
+      discountAmount,
+      note,
+      paymentMethod
     });
 
     // Record coupon usage if coupon was applied
@@ -241,7 +243,27 @@ export const verifyPayment = async (req: Request, res: Response) => {
 
     res.status(400).json({ message: 'پرداخت ناموفق بود' });
   } catch (error) {
-    console.error('Error verifying payment:', error);
     res.status(500).json({ message: 'خطا در تأیید پرداخت' });
+  }
+};
+
+export const updateWarranty = async (req: Request, res: Response) => {
+  const { id, itemId } = req.params;
+  const warrantyData = req.body;
+
+  try {
+    const order = await orderService.updateOrderItemWarranty(id, itemId, warrantyData);
+
+    if (!order) {
+      return res.status(404).json({ message: 'سفارش یا آیتم یافت نشد' });
+    }
+
+    res.json({
+      message: 'گارانتی با موفقیت به‌روزرسانی شد',
+      data: order
+    });
+  } catch (error) {
+    console.error('Error updating warranty:', error);
+    res.status(500).json({ message: 'خطا در به‌روزرسانی گارانتی' });
   }
 };

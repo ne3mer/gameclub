@@ -8,7 +8,9 @@ import {
   getUserByIdSchema,
   updateUserRoleSchema,
   updateUserSchema,
-  deleteUserSchema
+  deleteUserSchema,
+  sendUserMessageSchema,
+  getUserInsightsSchema
 } from '../schemas/user.schema';
 
 const router = Router();
@@ -17,10 +19,11 @@ const router = Router();
 router.use(adminAuth);
 
 router.get('/', validateResource(getAllUsersSchema), asyncHandler(userController.getAllUsers));
+router.post('/messages', validateResource(sendUserMessageSchema), asyncHandler(userController.sendUserMessage));
+router.get('/:id/insights', validateResource(getUserInsightsSchema), asyncHandler(userController.getUserInsights));
 router.get('/:id', validateResource(getUserByIdSchema), asyncHandler(userController.getUserById));
 router.patch('/:id/role', validateResource(updateUserRoleSchema), asyncHandler(userController.updateUserRole));
 router.patch('/:id', validateResource(updateUserSchema), asyncHandler(userController.updateUser));
 router.delete('/:id', validateResource(deleteUserSchema), asyncHandler(userController.deleteUser));
 
 export default router;
-

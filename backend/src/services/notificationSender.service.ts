@@ -213,7 +213,7 @@ export const sendOrderDelivery = async (
     telegramChatId: customerTelegram,
     orderNumber,
     credentials,
-    message
+
   });
 };
 

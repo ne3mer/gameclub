@@ -78,6 +78,14 @@ export default function OrdersPage() {
   const [deliveryCredentials, setDeliveryCredentials] = useState('');
   const [deliveryDate, setDeliveryDate] = useState('');
   const [savingDelivery, setSavingDelivery] = useState(false);
+  
+  // Warranty Modal State
+  const [warrantyModalOpen, setWarrantyModalOpen] = useState(false);
+  const [warrantyItemId, setWarrantyItemId] = useState<string | null>(null);
+  const [warrantyStartDate, setWarrantyStartDate] = useState('');
+  const [warrantyDuration, setWarrantyDuration] = useState('12'); // months
+  const [warrantyDescription, setWarrantyDescription] = useState('');
+  const [savingWarranty, setSavingWarranty] = useState(false);
 
   const buildQueryString = (pageOverride?: number) => {
     const params = new URLSearchParams();
@@ -106,7 +114,8 @@ export default function OrdersPage() {
         variantId: item.variantId,
         selectedOptions: options,
         quantity: item.quantity ?? 1,
-        pricePaid: item.pricePaid ?? 0
+        pricePaid: item.pricePaid ?? 0,
+        warranty: item.warranty
       };
     });
 
@@ -305,6 +314,56 @@ export default function OrdersPage() {
       setError(err instanceof Error ? err.message : 'ارسال ایمیل ممکن نیست.');
     } finally {
       setSendingEmail(false);
+    }
+  };
+
+  const openWarrantyModal = (itemId: string, currentWarranty?: any) => {
+    setWarrantyItemId(itemId);
+    setWarrantyStartDate(
+      currentWarranty?.startDate
+        ? new Date(currentWarranty.startDate).toISOString().slice(0, 10)
+        : new Date().toISOString().slice(0, 10)
+    );
+    setWarrantyDescription(currentWarranty?.description || '');
+    setWarrantyModalOpen(true);
+  };
+
+  const handleSaveWarranty = async () => {
+    if (!selectedOrder || !warrantyItemId || !ADMIN_API_KEY) return;
+    setSavingWarranty(true);
+    setError('');
+
+    try {
+      const startDate = new Date(warrantyStartDate);
+      const endDate = new Date(startDate);
+      endDate.setMonth(endDate.getMonth() + parseInt(warrantyDuration));
+
+      const payload = {
+        status: 'active',
+        startDate: startDate.toISOString(),
+        endDate: endDate.toISOString(),
+        description: warrantyDescription
+      };
+
+      const response = await fetch(
+        `${API_BASE_URL}/api/orders/${selectedOrder.id}/items/${warrantyItemId}/warranty`,
+        {
+          method: 'PATCH',
+          headers: adminHeaders(),
+          body: JSON.stringify(payload)
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error('ذخیره گارانتی انجام نشد');
+      }
+
+      await fetchOrders(meta.page);
+      setWarrantyModalOpen(false);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'خطا در ذخیره گارانتی');
+    } finally {
+      setSavingWarranty(false);
     }
   };
 
@@ -555,6 +614,24 @@ export default function OrdersPage() {
                             .join(' | ')}
                         </p>
                       )}
+                      <div className="mt-2 flex items-center justify-between border-t border-slate-200 pt-2">
+                        {item.warranty?.status === 'active' ? (
+                          <span className="flex items-center gap-1 text-[10px] font-bold text-emerald-600">
+                            <svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                            </svg>
+                            گارانتی فعال تا {formatDateTime(item.warranty.endDate)}
+                          </span>
+                        ) : (
+                          <span className="text-[10px] text-slate-400">بدون گارانتی</span>
+                        )}
+                        <button
+                          onClick={() => openWarrantyModal(item.id, item.warranty)}
+                          className="rounded-lg bg-slate-100 px-2 py-1 text-[10px] font-bold text-slate-600 hover:bg-slate-200"
+                        >
+                          مدیریت گارانتی
+                        </button>
+                      </div>
                     </div>
                   ))}
                 </div>
@@ -661,6 +738,64 @@ export default function OrdersPage() {
           )}
         </aside>
       </section>
+
+      {/* Warranty Modal */}
+      {warrantyModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 backdrop-blur-sm">
+          <div className="w-full max-w-md rounded-3xl bg-white p-6 shadow-2xl">
+            <h3 className="text-lg font-bold text-slate-900">مدیریت گارانتی محصول</h3>
+            <div className="mt-4 space-y-4">
+              <label className="block text-sm text-slate-600">
+                تاریخ شروع گارانتی
+                <input
+                  type="date"
+                  value={warrantyStartDate}
+                  onChange={(e) => setWarrantyStartDate(e.target.value)}
+                  className="mt-2 w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm"
+                />
+              </label>
+              <label className="block text-sm text-slate-600">
+                مدت زمان (ماه)
+                <select
+                  value={warrantyDuration}
+                  onChange={(e) => setWarrantyDuration(e.target.value)}
+                  className="mt-2 w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm"
+                >
+                  <option value="6">۶ ماه</option>
+                  <option value="12">۱۲ ماه (۱ سال)</option>
+                  <option value="24">۲۴ ماه (۲ سال)</option>
+                  <option value="36">۳۶ ماه (۳ سال)</option>
+                </select>
+              </label>
+              <label className="block text-sm text-slate-600">
+                توضیحات (شرایط گارانتی)
+                <textarea
+                  value={warrantyDescription}
+                  onChange={(e) => setWarrantyDescription(e.target.value)}
+                  className="mt-2 w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm"
+                  rows={3}
+                  placeholder="مثلاً: شامل تعویض اکانت در صورت بن شدن..."
+                />
+              </label>
+            </div>
+            <div className="mt-6 flex gap-3">
+              <button
+                onClick={handleSaveWarranty}
+                disabled={savingWarranty}
+                className="flex-1 rounded-2xl bg-emerald-500 px-4 py-3 text-sm font-bold text-white disabled:opacity-60"
+              >
+                {savingWarranty ? 'در حال ذخیره...' : 'ذخیره گارانتی'}
+              </button>
+              <button
+                onClick={() => setWarrantyModalOpen(false)}
+                className="rounded-2xl border border-slate-200 px-4 py-3 text-sm font-bold text-slate-600"
+              >
+                انصراف
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

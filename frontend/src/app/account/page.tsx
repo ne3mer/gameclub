@@ -9,6 +9,8 @@ import { formatToman } from '@/lib/format';
 import { NotificationCenter } from '@/components/dashboard/NotificationCenter';
 import { Icon } from '@/components/icons/Icon';
 import { getAuthToken } from '@/lib/auth';
+import MyTournamentsSection from '@/components/dashboard/MyTournamentsSection';
+import ArenaSettingsSection from '@/components/dashboard/ArenaSettingsSection';
 
 type ProfileState = {
   name?: string;
@@ -28,6 +30,12 @@ type RawOrderItem = {
   selectedOptions?: Record<string, string>;
   quantity?: number;
   pricePaid?: number;
+  warranty?: {
+    status: 'active' | 'expired' | 'voided';
+    startDate?: string;
+    endDate?: string;
+    description?: string;
+  };
 };
 
 type RawOrder = {
@@ -203,7 +211,8 @@ export default function AccountPage() {
               variantId: item.variantId,
               selectedOptions: item.selectedOptions,
               quantity: item.quantity ?? 1,
-              pricePaid: item.pricePaid ?? 0
+              pricePaid: item.pricePaid ?? 0,
+              warranty: item.warranty
             })),
             deliveryInfo: order.deliveryInfo
               ? {
@@ -436,6 +445,51 @@ export default function AccountPage() {
       {/* Notifications Section */}
       <section>
         <NotificationCenter />
+      </section>
+
+      {/* My Tournaments Section */}
+      <section>
+        <header className="mb-6 flex items-center justify-between">
+          <div>
+            <p className="text-xs text-slate-500">آرنا</p>
+            <h2 className="text-lg font-bold text-slate-900">تورنمنت‌های من</h2>
+          </div>
+          <Link
+            href="/arena"
+            className="text-xs font-bold text-purple-600 hover:text-purple-700"
+          >
+            مشاهده همه تورنمنت‌ها
+          </Link>
+        </header>
+        <MyTournamentsSection />
+      </section>
+
+
+      {/* Arena Settings Section */}
+      <section>
+        <header className="mb-6">
+          <p className="text-xs text-slate-500">تنظیمات آرنا</p>
+          <h2 className="text-lg font-bold text-slate-900">پروفایل گیمینگ و مالی</h2>
+        </header>
+        <ArenaSettingsSection />
+      </section>
+
+      {/* My Games Section */}
+      <section>
+        <header className="mb-6 flex items-center justify-between">
+          <div>
+            <p className="text-xs text-slate-500">کتابخانه من</p>
+            <h2 className="text-lg font-bold text-slate-900">بازی‌های خریداری شده</h2>
+          </div>
+        </header>
+        
+        {ordersLoading ? (
+          <div className="rounded-2xl border border-slate-100 bg-slate-50 py-10 text-center text-sm text-slate-500">
+            در حال بارگذاری بازی‌ها...
+          </div>
+        ) : (
+          <PurchasedGamesList orders={orders} />
+        )}
       </section>
 
       <section className="grid gap-6 lg:grid-cols-3">
@@ -975,3 +1029,275 @@ const AccountAuthGate = () => (
     </div>
   </div>
 );
+
+const PurchasedGamesList = ({ orders }: { orders: AdminOrder[] }) => {
+  const [selectedGame, setSelectedGame] = useState<any>(null);
+  const [showMessagesModal, setShowMessagesModal] = useState(false);
+
+  const games = useMemo(() => {
+    return orders
+      .filter((o) => o.paymentStatus === 'paid')
+      .flatMap((o) =>
+        o.items.map((item) => ({
+          ...item,
+          purchaseDate: o.createdAt,
+          orderId: o.id,
+          orderNumber: o.orderNumber,
+          deliveryInfo: o.deliveryInfo
+        }))
+      )
+      .sort((a, b) => new Date(b.purchaseDate).getTime() - new Date(a.purchaseDate).getTime());
+  }, [orders]);
+
+  const handleGameClick = (game: any) => {
+    setSelectedGame(game);
+    setShowMessagesModal(true);
+  };
+
+  if (games.length === 0) {
+    return (
+      <div className="rounded-2xl border border-slate-100 bg-slate-50 py-10 text-center text-sm text-slate-500">
+        هنوز بازی خریداری نکرده‌اید.
+      </div>
+    );
+  }
+
+  return (
+    <>
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+        {games.map((game, idx) => (
+          <GameWarrantyCard 
+            key={`${game.orderId}-${idx}`} 
+            game={game}
+            onClick={() => handleGameClick(game)}
+          />
+        ))}
+      </div>
+
+      {showMessagesModal && selectedGame && (
+        <GameMessagesModal
+          game={selectedGame}
+          onClose={() => {
+            setShowMessagesModal(false);
+            setSelectedGame(null);
+          }}
+        />
+      )}
+    </>
+  );
+};
+
+const GameWarrantyCard = ({ game, onClick }: { game: any; onClick: () => void }) => {
+  const warranty = game.warranty;
+  const hasWarranty = warranty?.status === 'active' && warranty.endDate;
+
+  // Calculate remaining time
+  const calculateTimeLeft = () => {
+    if (!hasWarranty) return { days: 0, percent: 0 };
+    const start = new Date(warranty.startDate || game.purchaseDate).getTime();
+    const end = new Date(warranty.endDate).getTime();
+    const now = new Date().getTime();
+    const total = end - start;
+    const remaining = end - now;
+    const percent = Math.max(0, Math.min(100, (remaining / total) * 100));
+    const days = Math.ceil(remaining / (1000 * 60 * 60 * 24));
+    return { days, percent };
+  };
+
+  const { days, percent } = calculateTimeLeft();
+  const isExpiringSoon = days > 0 && days <= 30;
+
+  return (
+    <button
+      onClick={onClick}
+      className="group relative w-full overflow-hidden rounded-3xl border border-slate-100 bg-white p-4 shadow-sm transition-all hover:shadow-md hover:-translate-y-1 hover:border-emerald-200 cursor-pointer text-left"
+    >
+      {/* Content */}
+      <div className="flex items-center gap-4">
+        <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-slate-100 text-slate-400 transition-colors group-hover:bg-emerald-50 group-hover:text-emerald-500">
+          <Icon name="game" size={24} />
+        </div>
+        <div className="flex-1 overflow-hidden">
+          <h3 className="truncate font-bold text-slate-900" title={game.gameTitle}>
+            {game.gameTitle}
+          </h3>
+          <p className="text-xs text-slate-500">
+            {new Date(game.purchaseDate).toLocaleDateString('fa-IR')}
+          </p>
+        </div>
+      </div>
+
+      {/* Warranty Section */}
+      <div className="mt-4">
+        {hasWarranty && days > 0 ? (
+          <div
+            className={`relative overflow-hidden rounded-2xl p-3 transition-colors ${
+              isExpiringSoon ? 'bg-amber-50' : 'bg-emerald-50'
+            }`}
+          >
+            <div className="mb-2 flex items-center justify-between">
+              <span
+                className={`text-xs font-bold ${
+                  isExpiringSoon ? 'text-amber-700' : 'text-emerald-700'
+                }`}
+              >
+                {isExpiringSoon ? '⚠️ رو به اتمام' : '🛡️ گارانتی فعال'}
+              </span>
+              <span
+                className={`text-xs font-bold ${
+                  isExpiringSoon ? 'text-amber-700' : 'text-emerald-700'
+                }`}
+              >
+                {days} روز
+              </span>
+            </div>
+            {/* Progress Bar */}
+            <div className="h-1.5 w-full overflow-hidden rounded-full bg-white/50">
+              <div
+                className={`h-full rounded-full transition-all duration-1000 ${
+                  isExpiringSoon ? 'bg-amber-500' : 'bg-emerald-500'
+                }`}
+                style={{ width: `${percent}%` }}
+              />
+            </div>
+            {/* Shine Effect */}
+            <div className="absolute -right-4 -top-4 h-12 w-12 rounded-full bg-white/20 blur-xl transition-transform group-hover:translate-x-2 group-hover:translate-y-2"></div>
+          </div>
+        ) : (
+          <div className="rounded-2xl bg-slate-50 p-3 text-center text-xs text-slate-400">
+            {warranty?.status === 'expired'
+              ? 'گارانتی به اتمام رسیده'
+              : warranty?.status === 'voided'
+              ? 'گارانتی باطل شده'
+              : 'بدون گارانتی فعال'}
+          </div>
+        )}
+      </div>
+    </button>
+  );
+};
+
+const GameMessagesModal = ({ game, onClose }: { game: any; onClose: () => void }) => {
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+      {/* Backdrop */}
+      <div 
+        className="absolute inset-0 bg-black/50 backdrop-blur-sm" 
+        onClick={onClose}
+      />
+      
+      {/* Modal */}
+      <div className="relative z-10 w-full max-w-2xl max-h-[90vh] overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-2xl">
+        {/* Header */}
+        <div className="border-b border-slate-100 bg-gradient-to-br from-emerald-50 to-white p-6">
+          <div className="flex items-start justify-between gap-4">
+            <div className="flex-1">
+              <div className="flex items-center gap-3 mb-2">
+                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-emerald-100 text-emerald-600">
+                  <Icon name="message" size={20} />
+                </div>
+                <div>
+                  <h2 className="text-lg font-black text-slate-900">{game.gameTitle}</h2>
+                  <p className="text-xs text-slate-500">پیام‌های ادمین</p>
+                </div>
+              </div>
+              <div className="flex flex-wrap gap-2 text-xs">
+                <span className="rounded-full bg-white px-3 py-1 font-semibold text-slate-600">
+                  سفارش: {game.orderNumber}
+                </span>
+                <span className="rounded-full bg-white px-3 py-1 font-semibold text-slate-600">
+                  {new Date(game.purchaseDate).toLocaleDateString('fa-IR')}
+                </span>
+              </div>
+            </div>
+            <button
+              onClick={onClose}
+              className="rounded-xl p-2 transition hover:bg-slate-100"
+            >
+              <Icon name="x" size={20} className="text-slate-600" />
+            </button>
+          </div>
+        </div>
+
+        {/* Content */}
+        <div className="overflow-y-auto p-6" style={{ maxHeight: 'calc(90vh - 140px)' }}>
+          {game.deliveryInfo?.message || game.deliveryInfo?.credentials ? (
+            <div className="space-y-4">
+              {/* Delivery Message */}
+              {game.deliveryInfo.message && (
+                <div className="rounded-2xl border border-emerald-100 bg-emerald-50/60 p-4">
+                  <div className="mb-2 flex items-center gap-2">
+                    <Icon name="mail" size={16} className="text-emerald-600" />
+                    <p className="text-sm font-bold text-emerald-900">پیام تحویل</p>
+                  </div>
+                  <p className="whitespace-pre-line text-sm leading-relaxed text-emerald-800">
+                    {game.deliveryInfo.message}
+                  </p>
+                  {game.deliveryInfo.deliveredAt && (
+                    <p className="mt-3 text-xs text-emerald-700">
+                      📅 ارسال شده در: {new Date(game.deliveryInfo.deliveredAt).toLocaleString('fa-IR')}
+                    </p>
+                  )}
+                </div>
+              )}
+
+              {/* Credentials */}
+              {game.deliveryInfo.credentials && (
+                <div className="rounded-2xl border border-blue-100 bg-blue-50/60 p-4">
+                  <div className="mb-2 flex items-center gap-2">
+                    <Icon name="lock" size={16} className="text-blue-600" />
+                    <p className="text-sm font-bold text-blue-900">اطلاعات اکانت</p>
+                  </div>
+                  <div className="rounded-xl bg-white/80 p-3 font-mono text-sm text-slate-700">
+                    {game.deliveryInfo.credentials}
+                  </div>
+                  <p className="mt-2 text-xs text-blue-700">
+                    💡 این اطلاعات را در جای امنی ذخیره کنید
+                  </p>
+                </div>
+              )}
+
+              {/* Warranty Info if exists */}
+              {game.warranty?.status === 'active' && game.warranty.description && (
+                <div className="rounded-2xl border border-amber-100 bg-amber-50/60 p-4">
+                  <div className="mb-2 flex items-center gap-2">
+                    <Icon name="shield" size={16} className="text-amber-600" />
+                    <p className="text-sm font-bold text-amber-900">شرایط گارانتی</p>
+                  </div>
+                  <p className="whitespace-pre-line text-sm leading-relaxed text-amber-800">
+                    {game.warranty.description}
+                  </p>
+                  {game.warranty.endDate && (
+                    <p className="mt-3 text-xs text-amber-700">
+                      ⏰ اعتبار تا: {new Date(game.warranty.endDate).toLocaleDateString('fa-IR')}
+                    </p>
+                  )}
+                </div>
+              )}
+            </div>
+          ) : (
+            <div className="rounded-2xl border border-slate-100 bg-slate-50 p-8 text-center">
+              <div className="mx-auto mb-3 flex h-16 w-16 items-center justify-center rounded-full bg-slate-100">
+                <Icon name="info" size={32} className="text-slate-400" />
+              </div>
+              <p className="text-sm font-semibold text-slate-600">هنوز پیامی ارسال نشده</p>
+              <p className="mt-1 text-xs text-slate-500">
+                پس از تحویل بازی، اطلاعات اکانت و پیام‌های ادمین اینجا نمایش داده می‌شود
+              </p>
+            </div>
+          )}
+        </div>
+
+        {/* Footer */}
+        <div className="border-t border-slate-100 bg-slate-50 p-4">
+          <button
+            onClick={onClose}
+            className="w-full rounded-2xl bg-slate-900 py-3 text-sm font-bold text-white transition hover:bg-slate-800"
+          >
+            بستن
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+};

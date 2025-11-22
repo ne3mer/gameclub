@@ -46,3 +46,28 @@ export const deleteUserSchema = z.object({
   })
 });
 
+export const sendUserMessageSchema = z.object({
+  body: z.object({
+    subject: z.string().min(3, 'موضوع باید حداقل ۳ کاراکتر باشد'),
+    message: z.string().min(3, 'متن پیام باید حداقل ۳ کاراکتر باشد'),
+    userIds: z.array(z.string().min(1)).optional(),
+    role: z.enum(['user', 'admin']).optional(),
+    sendToAll: z.boolean().optional(),
+    channel: z.enum(['email', 'telegram', 'both']).optional()
+  }).refine(
+    (data) => Boolean(data.sendToAll || (data.userIds && data.userIds.length > 0) || data.role),
+    {
+      message: 'باید حداقل یک کاربر یا دسته‌بندی مخاطب انتخاب شود'
+    }
+  ),
+  query: empty,
+  params: empty
+});
+
+export const getUserInsightsSchema = z.object({
+  body: empty,
+  query: empty,
+  params: z.object({
+    id: z.string().min(1)
+  })
+});

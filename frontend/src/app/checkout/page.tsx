@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import Image from 'next/image';
@@ -33,13 +33,50 @@ export default function CheckoutPage() {
   const [customerInfo, setCustomerInfo] = useState({
     name: '',
     email: '',
-    phone: ''
+    phone: '',
+    note: ''
   });
+
+  const [paymentMethod, setPaymentMethod] = useState('online');
 
   const [couponCode, setCouponCode] = useState('');
   const [couponLoading, setCouponLoading] = useState(false);
   const [couponResult, setCouponResult] = useState<CouponResult | null>(null);
   const [appliedCoupon, setAppliedCoupon] = useState<CouponResult['coupon'] | null>(null);
+
+  // Auto-fill user data
+  useEffect(() => {
+    const fetchUserProfile = async () => {
+      const token = getAuthToken();
+      if (!token) return;
+
+      try {
+        const response = await fetch(`${API_BASE_URL}/api/profile`, {
+          headers: {
+            Authorization: `Bearer ${token}`
+          }
+        });
+
+        if (response.ok) {
+          const data = await response.json();
+          const user = data.data;
+          
+          if (user) {
+            setCustomerInfo(prev => ({
+              ...prev,
+              name: user.name || '',
+              email: user.email || '',
+              phone: user.phone || ''
+            }));
+          }
+        }
+      } catch (err) {
+        console.error('Error fetching profile:', err);
+      }
+    };
+
+    fetchUserProfile();
+  }, []);
 
   const validateCoupon = async (code: string) => {
     if (!code.trim()) {
@@ -142,7 +179,9 @@ export default function CheckoutPage() {
           items,
           totalAmount: finalAmount,
           couponCode: appliedCoupon?.code,
-          discountAmount: discountAmount > 0 ? discountAmount : undefined
+          discountAmount: discountAmount > 0 ? discountAmount : undefined,
+          paymentMethod, // Send payment method if backend supports it, otherwise it's just for UI
+          note: customerInfo.note
         })
       });
 
@@ -202,10 +241,17 @@ export default function CheckoutPage() {
         <h1 className="mb-8 text-2xl font-black text-slate-900">تکمیل خرید</h1>
 
         <form onSubmit={handleSubmit} className="grid gap-8 lg:grid-cols-3">
-          {/* Customer Information */}
+          {/* Left Column: Forms */}
           <div className="space-y-6 lg:col-span-2">
+            
+            {/* Customer Information */}
             <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
-              <h2 className="mb-4 text-lg font-bold text-slate-900">اطلاعات تماس</h2>
+              <div className="mb-6 flex items-center gap-3 border-b border-slate-100 pb-4">
+                <div className="flex h-10 w-10 items-center justify-center rounded-full bg-blue-50 text-blue-600">
+                  <Icon name="user" size={20} />
+                </div>
+                <h2 className="text-lg font-bold text-slate-900">اطلاعات تماس</h2>
+              </div>
               
               {error && (
                 <div className="mb-4 rounded-2xl bg-rose-50 px-4 py-3 text-sm text-rose-700">
@@ -213,36 +259,18 @@ export default function CheckoutPage() {
                 </div>
               )}
 
-              <div className="space-y-4">
+              <div className="grid gap-4 md:grid-cols-2">
                 <div>
                   <label className="block text-sm font-bold text-slate-700">
-                    نام و نام خانوادگی (اختیاری)
+                    نام و نام خانوادگی
                   </label>
                   <input
                     type="text"
                     value={customerInfo.name}
                     onChange={(e) => setCustomerInfo({ ...customerInfo, name: e.target.value })}
-                    className="mt-2 w-full rounded-xl border border-slate-200 px-4 py-3 text-sm"
+                    className="mt-2 w-full rounded-xl border border-slate-200 px-4 py-3 text-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 transition"
                     placeholder="علی احمدی"
                   />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-bold text-slate-700">
-                    ایمیل <span className="text-rose-500">*</span>
-                  </label>
-                  <input
-                    type="email"
-                    value={customerInfo.email}
-                    onChange={(e) => setCustomerInfo({ ...customerInfo, email: e.target.value })}
-                    className="mt-2 w-full rounded-xl border border-slate-200 px-4 py-3 text-sm"
-                    placeholder="example@email.com"
-                    required
-                    dir="ltr"
-                  />
-                  <p className="mt-1 text-xs text-slate-500">
-                    اطلاعات اکانت به این ایمیل ارسال می‌شود
-                  </p>
                 </div>
 
                 <div>
@@ -253,13 +281,100 @@ export default function CheckoutPage() {
                     type="tel"
                     value={customerInfo.phone}
                     onChange={(e) => setCustomerInfo({ ...customerInfo, phone: e.target.value })}
-                    className="mt-2 w-full rounded-xl border border-slate-200 px-4 py-3 text-sm"
+                    className="mt-2 w-full rounded-xl border border-slate-200 px-4 py-3 text-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 transition"
                     placeholder="09123456789"
                     required
                     dir="ltr"
                   />
                 </div>
+
+                <div className="md:col-span-2">
+                  <label className="block text-sm font-bold text-slate-700">
+                    ایمیل <span className="text-rose-500">*</span>
+                  </label>
+                  <input
+                    type="email"
+                    value={customerInfo.email}
+                    onChange={(e) => setCustomerInfo({ ...customerInfo, email: e.target.value })}
+                    className="mt-2 w-full rounded-xl border border-slate-200 px-4 py-3 text-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 transition"
+                    placeholder="example@email.com"
+                    required
+                    dir="ltr"
+                  />
+                  <p className="mt-1 text-xs text-slate-500">
+                    اطلاعات اکانت به این ایمیل ارسال می‌شود
+                  </p>
+                </div>
               </div>
+            </div>
+
+            {/* Payment Method */}
+            <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
+              <div className="mb-6 flex items-center gap-3 border-b border-slate-100 pb-4">
+                <div className="flex h-10 w-10 items-center justify-center rounded-full bg-emerald-50 text-emerald-600">
+                  <Icon name="credit-card" size={20} />
+                </div>
+                <h2 className="text-lg font-bold text-slate-900">روش پرداخت</h2>
+              </div>
+
+              <div className="grid gap-4 md:grid-cols-2">
+                <label className={`relative flex cursor-pointer items-center gap-4 rounded-2xl border p-4 transition ${
+                  paymentMethod === 'online' 
+                    ? 'border-emerald-500 bg-emerald-50/50 ring-1 ring-emerald-500' 
+                    : 'border-slate-200 hover:border-slate-300'
+                }`}>
+                  <input
+                    type="radio"
+                    name="paymentMethod"
+                    value="online"
+                    checked={paymentMethod === 'online'}
+                    onChange={(e) => setPaymentMethod(e.target.value)}
+                    className="h-5 w-5 text-emerald-500 focus:ring-emerald-500"
+                  />
+                  <div>
+                    <div className="font-bold text-slate-900">پرداخت اینترنتی</div>
+                    <div className="text-xs text-slate-500">کلیه کارت‌های بانکی عضو شتاب</div>
+                  </div>
+                </label>
+
+                <label className={`relative flex cursor-pointer items-center gap-4 rounded-2xl border p-4 transition ${
+                  paymentMethod === 'wallet' 
+                    ? 'border-emerald-500 bg-emerald-50/50 ring-1 ring-emerald-500' 
+                    : 'border-slate-200 hover:border-slate-300'
+                }`}>
+                  <input
+                    type="radio"
+                    name="paymentMethod"
+                    value="wallet"
+                    checked={paymentMethod === 'wallet'}
+                    onChange={(e) => setPaymentMethod(e.target.value)}
+                    className="h-5 w-5 text-emerald-500 focus:ring-emerald-500"
+                    disabled
+                  />
+                  <div className="opacity-50">
+                    <div className="font-bold text-slate-900">کیف پول (به زودی)</div>
+                    <div className="text-xs text-slate-500">پرداخت سریع با موجودی حساب</div>
+                  </div>
+                </label>
+              </div>
+            </div>
+
+            {/* Additional Notes */}
+            <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
+              <div className="mb-6 flex items-center gap-3 border-b border-slate-100 pb-4">
+                <div className="flex h-10 w-10 items-center justify-center rounded-full bg-purple-50 text-purple-600">
+                  <Icon name="message" size={20} />
+                </div>
+                <h2 className="text-lg font-bold text-slate-900">توضیحات سفارش (اختیاری)</h2>
+              </div>
+
+              <textarea
+                value={customerInfo.note}
+                onChange={(e) => setCustomerInfo({ ...customerInfo, note: e.target.value })}
+                rows={3}
+                className="w-full rounded-xl border border-slate-200 px-4 py-3 text-sm focus:border-purple-500 focus:ring-2 focus:ring-purple-500/20 transition"
+                placeholder="اگر توضیح خاصی دارید اینجا بنویسید..."
+              />
             </div>
 
             {/* Order Items */}
@@ -301,120 +416,122 @@ export default function CheckoutPage() {
             </div>
           </div>
 
-          {/* Order Summary */}
-          <div className="h-fit rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
-            <h2 className="mb-4 text-lg font-bold text-slate-900">خلاصه سفارش</h2>
-            
-            {/* Coupon Section */}
-            <div className="mb-4 rounded-xl border-2 border-dashed border-slate-200 bg-slate-50 p-4">
-              {!appliedCoupon ? (
-                <div className="space-y-2">
-                  <label className="block text-xs font-bold text-slate-700">کد تخفیف</label>
-                  <div className="flex gap-2">
-                    <input
-                      type="text"
-                      value={couponCode}
-                      onChange={(e) => setCouponCode(e.target.value.toUpperCase())}
-                      onKeyDown={(e) => {
-                        if (e.key === 'Enter') {
-                          e.preventDefault();
-                          if (couponCode.trim() && !couponLoading) {
-                            validateCoupon(couponCode);
+          {/* Right Column: Summary */}
+          <div className="h-fit space-y-6">
+            <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm sticky top-24">
+              <h2 className="mb-4 text-lg font-bold text-slate-900">خلاصه سفارش</h2>
+              
+              {/* Coupon Section */}
+              <div className="mb-4 rounded-xl border-2 border-dashed border-slate-200 bg-slate-50 p-4">
+                {!appliedCoupon ? (
+                  <div className="space-y-2">
+                    <label className="block text-xs font-bold text-slate-700">کد تخفیف</label>
+                    <div className="flex gap-2">
+                      <input
+                        type="text"
+                        value={couponCode}
+                        onChange={(e) => setCouponCode(e.target.value.toUpperCase())}
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter') {
+                            e.preventDefault();
+                            if (couponCode.trim() && !couponLoading) {
+                              validateCoupon(couponCode);
+                            }
                           }
-                        }
-                      }}
-                      placeholder="کد تخفیف را وارد کنید"
-                      className="flex-1 rounded-lg border border-slate-200 px-3 py-2 text-sm font-mono focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 transition"
-                      dir="ltr"
-                    />
+                        }}
+                        placeholder="کد تخفیف"
+                        className="flex-1 rounded-lg border border-slate-200 px-3 py-2 text-sm font-mono focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 transition"
+                        dir="ltr"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => validateCoupon(couponCode)}
+                        disabled={couponLoading || !couponCode.trim()}
+                        className="rounded-lg bg-emerald-500 px-4 py-2 text-sm font-bold text-white transition hover:bg-emerald-600 disabled:opacity-50 disabled:cursor-not-allowed"
+                      >
+                        {couponLoading ? '...' : 'اعمال'}
+                      </button>
+                    </div>
+                    {couponResult && !couponResult.valid && (
+                      <p className="text-xs text-rose-600 mt-1">{couponResult.error}</p>
+                    )}
+                  </div>
+                ) : (
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <Icon name="check" size={18} className="text-emerald-500" />
+                      <div>
+                        <p className="text-xs font-bold text-emerald-700">{appliedCoupon.name}</p>
+                        <p className="text-xs text-slate-600 font-mono">{appliedCoupon.code}</p>
+                      </div>
+                    </div>
                     <button
                       type="button"
-                      onClick={() => validateCoupon(couponCode)}
-                      disabled={couponLoading || !couponCode.trim()}
-                      className="rounded-lg bg-emerald-500 px-4 py-2 text-sm font-bold text-white transition hover:bg-emerald-600 disabled:opacity-50 disabled:cursor-not-allowed"
+                      onClick={removeCoupon}
+                      className="rounded-lg p-1.5 text-slate-400 hover:bg-slate-200 hover:text-slate-600 transition"
+                      title="حذف کوپن"
                     >
-                      {couponLoading ? '...' : 'اعمال'}
+                      <Icon name="x" size={16} />
                     </button>
                   </div>
-                  {couponResult && !couponResult.valid && (
-                    <p className="text-xs text-rose-600 mt-1">{couponResult.error}</p>
-                  )}
-                </div>
-              ) : (
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <Icon name="check" size={18} className="text-emerald-500" />
-                    <div>
-                      <p className="text-xs font-bold text-emerald-700">{appliedCoupon.name}</p>
-                      <p className="text-xs text-slate-600 font-mono">{appliedCoupon.code}</p>
-                    </div>
-                  </div>
-                  <button
-                    type="button"
-                    onClick={removeCoupon}
-                    className="rounded-lg p-1.5 text-slate-400 hover:bg-slate-200 hover:text-slate-600 transition"
-                    title="حذف کوپن"
-                  >
-                    <Icon name="x" size={16} />
-                  </button>
-                </div>
-              )}
-            </div>
-            
-            <div className="space-y-3 border-b border-slate-100 pb-4">
-              <div className="flex justify-between text-sm text-slate-600">
-                <span>قیمت کالاها ({cart.items.length})</span>
-                <span>{formatToman(totalPrice)} تومان</span>
+                )}
               </div>
-              {appliedCoupon && (
-                <div className="flex justify-between text-sm">
-                  <span className="text-emerald-600 font-semibold">تخفیف ({appliedCoupon.code})</span>
-                  <span className="text-emerald-600 font-bold">
-                    -{formatToman(appliedCoupon.discount)} تومان
-                  </span>
-                </div>
-              )}
-              {!appliedCoupon && (
+              
+              <div className="space-y-3 border-b border-slate-100 pb-4">
                 <div className="flex justify-between text-sm text-slate-600">
-                  <span>تخفیف</span>
-                  <span>0 تومان</span>
+                  <span>قیمت کالاها ({cart.items.length})</span>
+                  <span>{formatToman(totalPrice)} تومان</span>
+                </div>
+                {appliedCoupon && (
+                  <div className="flex justify-between text-sm">
+                    <span className="text-emerald-600 font-semibold">تخفیف ({appliedCoupon.code})</span>
+                    <span className="text-emerald-600 font-bold">
+                      -{formatToman(appliedCoupon.discount)} تومان
+                    </span>
+                  </div>
+                )}
+                {!appliedCoupon && (
+                  <div className="flex justify-between text-sm text-slate-600">
+                    <span>تخفیف</span>
+                    <span>0 تومان</span>
+                  </div>
+                )}
+              </div>
+
+              <div className="mt-4 flex justify-between text-lg font-black text-slate-900">
+                <span>مبلغ قابل پرداخت</span>
+                <span>
+                  {formatToman(Math.max(0, totalPrice - (appliedCoupon?.discount || 0)))} تومان
+                </span>
+              </div>
+              
+              {appliedCoupon && (
+                <div className="mt-2 rounded-lg bg-emerald-50 px-3 py-2 text-xs text-emerald-700">
+                  <span className="font-semibold">🎉 شما {formatToman(appliedCoupon.discount)} تومان تخفیف دریافت کردید!</span>
                 </div>
               )}
-            </div>
 
-            <div className="mt-4 flex justify-between text-lg font-black text-slate-900">
-              <span>مبلغ قابل پرداخت</span>
-              <span>
-                {formatToman(Math.max(0, totalPrice - (appliedCoupon?.discount || 0)))} تومان
-              </span>
-            </div>
-            
-            {appliedCoupon && (
-              <div className="mt-2 rounded-lg bg-emerald-50 px-3 py-2 text-xs text-emerald-700">
-                <span className="font-semibold">🎉 شما {formatToman(appliedCoupon.discount)} تومان تخفیف دریافت کردید!</span>
-              </div>
-            )}
+              <button
+                type="submit"
+                disabled={loading || !customerInfo.email || !customerInfo.phone}
+                className="mt-6 w-full rounded-2xl bg-emerald-500 py-3 font-bold text-white transition hover:bg-emerald-600 disabled:opacity-50 disabled:cursor-not-allowed shadow-lg shadow-emerald-500/20"
+              >
+                {loading ? 'در حال پردازش...' : 'پرداخت و ثبت نهایی'}
+              </button>
+              
+              <p className="mt-4 text-center text-xs text-slate-400">
+                با نهایی کردن خرید، قوانین و مقررات GameClub را می‌پذیرید.
+              </p>
 
-            <button
-              type="submit"
-              disabled={loading || !customerInfo.email || !customerInfo.phone}
-              className="mt-6 w-full rounded-2xl bg-emerald-500 py-3 font-bold text-white transition hover:bg-emerald-600 disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              {loading ? 'در حال پردازش...' : 'پرداخت و ثبت نهایی'}
-            </button>
-            
-            <p className="mt-4 text-center text-xs text-slate-400">
-              با نهایی کردن خرید، قوانین و مقررات GameClub را می‌پذیرید.
-            </p>
-
-            <div className="mt-6 rounded-xl bg-emerald-50 p-4">
-              <div className="flex items-start gap-3">
-                <svg className="h-5 w-5 flex-shrink-0 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
-                <div className="text-xs text-emerald-700">
-                  <div className="font-bold">پرداخت امن</div>
-                  <div className="mt-1">اطلاعات اکانت بلافاصله پس از پرداخت به ایمیل و پنل کاربری شما ارسال می‌شود.</div>
+              <div className="mt-6 rounded-xl bg-emerald-50 p-4">
+                <div className="flex items-start gap-3">
+                  <svg className="h-5 w-5 flex-shrink-0 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                  <div className="text-xs text-emerald-700">
+                    <div className="font-bold">پرداخت امن</div>
+                    <div className="mt-1">اطلاعات اکانت بلافاصله پس از پرداخت به ایمیل و پنل کاربری شما ارسال می‌شود.</div>
+                  </div>
                 </div>
               </div>
             </div>

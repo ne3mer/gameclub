@@ -69,6 +69,12 @@ export function AnalyticsProvider({ children }: { children: ReactNode }) {
     }
   }, []);
 
+  const getAuthHeader = () => {
+    if (typeof window === 'undefined') return undefined;
+    const token = localStorage.getItem('gc_token');
+    return token ? { Authorization: `Bearer ${token}` } : undefined;
+  };
+
   // Track page view
   const trackPageView = useCallback(async (data?: Partial<PageViewData>) => {
     if (!sessionId || typeof window === 'undefined') return;
@@ -87,9 +93,14 @@ export function AnalyticsProvider({ children }: { children: ReactNode }) {
         ...data
       };
 
+      const authHeader = getAuthHeader();
+
       await fetch(`${API_BASE_URL}/api/analytics/pageview`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          ...(authHeader ?? {})
+        },
         body: JSON.stringify(pageViewData)
       });
     } catch (error) {
@@ -110,9 +121,14 @@ export function AnalyticsProvider({ children }: { children: ReactNode }) {
         ...data
       };
 
+      const authHeader = getAuthHeader();
+
       await fetch(`${API_BASE_URL}/api/analytics/click`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          ...(authHeader ?? {})
+        },
         body: JSON.stringify(clickData)
       });
     } catch (error) {
@@ -133,9 +149,14 @@ export function AnalyticsProvider({ children }: { children: ReactNode }) {
         eventData
       };
 
+      const authHeader = getAuthHeader();
+
       await fetch(`${API_BASE_URL}/api/analytics/event`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          ...(authHeader ?? {})
+        },
         body: JSON.stringify(event)
       });
     } catch (error) {
@@ -159,6 +180,35 @@ export function AnalyticsProvider({ children }: { children: ReactNode }) {
       return () => clearTimeout(timer);
     }
   }, [pathname, sessionId, trackPageView]);
+
+  // Auto-track clicks globally
+  useEffect(() => {
+    if (!sessionId || typeof window === 'undefined') return;
+    
+    // Don't track admin pages or account pages
+    if (pathname?.startsWith('/admin') || pathname?.startsWith('/account')) {
+      return;
+    }
+
+    const handleClick = (e: MouseEvent) => {
+      const target = e.target as HTMLElement;
+      // Find closest interactive element
+      const element = target.closest('button, a, [role="button"], input[type="submit"], input[type="button"]');
+      
+      if (element) {
+        const el = element as HTMLElement;
+        trackClick({
+          elementType: el.tagName.toLowerCase(),
+          elementId: el.id,
+          elementText: el.innerText?.slice(0, 100) || (el as HTMLInputElement).value || '',
+          elementClass: typeof el.className === 'string' ? el.className : ''
+        });
+      }
+    };
+
+    document.addEventListener('click', handleClick);
+    return () => document.removeEventListener('click', handleClick);
+  }, [sessionId, pathname, trackClick]);
 
   const value = {
     trackPageView,

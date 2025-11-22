@@ -157,7 +157,7 @@ export function GameFilters({ inline = false }: GameFiltersProps) {
       <div>
         <div className="mb-3 flex items-center justify-between">
           <label className="text-sm font-bold text-slate-700 flex items-center gap-2">
-            <Icon name="controller" size={18} />
+            <Icon name="game" size={18} />
             پلتفرم
           </label>
         </div>
@@ -181,7 +181,7 @@ export function GameFilters({ inline = false }: GameFiltersProps) {
       <div>
         <div className="mb-3 flex items-center justify-between">
           <label className="text-sm font-bold text-slate-700 flex items-center gap-2">
-            <Icon name="tag" size={18} />
+            <Icon name="sparkles" size={18} />
             ژانر
           </label>
         </div>

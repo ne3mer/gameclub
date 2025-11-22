@@ -70,11 +70,11 @@ export const popularGames: GameCardContent[] = [
 ];
 
 export const categories = [
-  { id: 'action', title: 'اکشن سینمایی', description: 'God of War، Spider-Man و عناوین پرهیجان دیگر.' },
-  { id: 'sports', title: 'ورزشی و رقابتی', description: 'برای عاشقان FIFA، NBA و رقابت آنلاین.' },
-  { id: 'story', title: 'داستان‌محور', description: 'بازی‌های سینمایی با روایت عمیق و شخصیت‌های به‌یادماندنی.' },
-  { id: 'family', title: 'مناسب خانواده', description: 'Minecraft، Sackboy و گزینه‌های مطمئن برای کودکان.' },
-  { id: 'budget', title: 'گیم‌های اقتصادی', description: 'انتخاب‌های زیر ۹۰۰ هزار تومان با ضمانت GameClub.' }
+  { id: 'action', name: 'اکشن سینمایی', slug: 'action', description: 'God of War، Spider-Man و عناوین پرهیجان دیگر.', icon: '⚔️', color: 'red' },
+  { id: 'sports', name: 'ورزشی و رقابتی', slug: 'sports', description: 'برای عاشقان FIFA، NBA و رقابت آنلاین.', icon: '⚽', color: 'green' },
+  { id: 'story', name: 'داستان‌محور', slug: 'story', description: 'بازی‌های سینمایی با روایت عمیق و شخصیت‌های به‌یادماندنی.', icon: '📖', color: 'purple' },
+  { id: 'family', name: 'مناسب خانواده', slug: 'family', description: 'Minecraft، Sackboy و گزینه‌های مطمئن برای کودکان.', icon: '👨‍👩‍👧‍👦', color: 'yellow' },
+  { id: 'budget', name: 'گیم‌های اقتصادی', slug: 'budget', description: 'انتخاب‌های زیر ۹۰۰ هزار تومان با ضمانت GameClub.', icon: '💰', color: 'blue' }
 ];
 
 export const trustSignals = [

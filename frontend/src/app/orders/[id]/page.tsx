@@ -22,12 +22,26 @@ interface Order {
     pricePaid: number;
     quantity: number;
     selectedOptions?: Record<string, string>;
+    warranty?: {
+      status: 'active' | 'expired' | 'voided';
+      startDate?: string;
+      endDate?: string;
+      description?: string;
+    };
   }>;
   totalAmount: number;
   paymentStatus: 'pending' | 'paid' | 'failed';
   fulfillmentStatus: 'pending' | 'assigned' | 'delivered' | 'refunded';
   createdAt: string;
 }
+
+// Helper to calculate days remaining
+const getDaysRemaining = (endDate?: string) => {
+  if (!endDate) return 0;
+  const end = new Date(endDate).getTime();
+  const now = new Date().getTime();
+  return Math.ceil((end - now) / (1000 * 60 * 60 * 24));
+};
 
 export default function OrderDetailPage() {
   const params = useParams();
@@ -176,38 +190,77 @@ export default function OrderDetailPage() {
           {/* Order Items */}
           <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
             <h2 className="mb-4 text-lg font-bold text-slate-900">محصولات سفارش</h2>
-            <div className="space-y-3">
-              {order.items.map((item, index) => (
-                <div key={index} className="flex items-center gap-4 rounded-xl border border-slate-100 bg-slate-50 p-3">
-                  <div className="relative h-16 w-16 flex-shrink-0 overflow-hidden rounded-lg bg-slate-100">
-                    {item.gameId.coverUrl ? (
-                      <Image
-                        src={item.gameId.coverUrl}
-                        alt={item.gameId.title}
-                        fill
-                        className="object-cover"
-                      />
-                    ) : (
-                      <div className="flex h-full items-center justify-center text-xs text-slate-400">
-                        بدون تصویر
+            <div className="space-y-4">
+              {order.items.map((item, index) => {
+                const daysRemaining = item.warranty?.endDate ? getDaysRemaining(item.warranty.endDate) : 0;
+                const hasActiveWarranty = item.warranty?.status === 'active' && daysRemaining > 0;
+
+                return (
+                  <div key={index} className="space-y-3 rounded-2xl border border-slate-100 bg-slate-50 p-4">
+                    <div className="flex items-center gap-4">
+                      <div className="relative h-16 w-16 flex-shrink-0 overflow-hidden rounded-lg bg-slate-100">
+                        {item.gameId.coverUrl ? (
+                          <Image
+                            src={item.gameId.coverUrl}
+                            alt={item.gameId.title}
+                            fill
+                            className="object-cover"
+                          />
+                        ) : (
+                          <div className="flex h-full items-center justify-center text-xs text-slate-400">
+                            بدون تصویر
+                          </div>
+                        )}
+                      </div>
+                      <div className="flex-1">
+                        <div className="font-bold text-slate-900">{item.gameId.title}</div>
+                        {item.selectedOptions && Object.keys(item.selectedOptions).length > 0 && (
+                          <div className="text-xs text-slate-500">
+                            {Object.entries(item.selectedOptions).map(([k, v]) => v).join(' | ')}
+                          </div>
+                        )}
+                        <div className="text-sm text-slate-600">تعداد: {item.quantity}</div>
+                      </div>
+                      <div className="text-left">
+                        <div className="font-bold text-slate-900">{formatToman(item.pricePaid * item.quantity)}</div>
+                        <div className="text-xs text-slate-500">تومان</div>
+                      </div>
+                    </div>
+
+                    {/* Warranty Card */}
+                    {hasActiveWarranty && item.warranty && (
+                      <div className="relative overflow-hidden rounded-xl border border-amber-200 bg-gradient-to-br from-amber-50 to-orange-50 p-4">
+                        <div className="flex items-start justify-between gap-4">
+                          <div className="flex items-center gap-3">
+                            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-amber-100 text-amber-600 shadow-sm">
+                              <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                              </svg>
+                            </div>
+                            <div>
+                              <p className="text-sm font-bold text-amber-900">گارانتی فعال محصول</p>
+                              <p className="text-xs text-amber-700">
+                                {daysRemaining} روز باقی‌مانده از گارانتی
+                              </p>
+                            </div>
+                          </div>
+                          <div className="text-left text-xs text-amber-800/70">
+                            <p>شروع: {new Date(item.warranty.startDate!).toLocaleDateString('fa-IR')}</p>
+                            <p>پایان: {new Date(item.warranty.endDate!).toLocaleDateString('fa-IR')}</p>
+                          </div>
+                        </div>
+                        {item.warranty.description && (
+                          <div className="mt-3 border-t border-amber-200/50 pt-2 text-xs leading-relaxed text-amber-800">
+                            {item.warranty.description}
+                          </div>
+                        )}
+                        {/* Decorative shine */}
+                        <div className="absolute -right-4 -top-4 h-16 w-16 rounded-full bg-white/20 blur-xl"></div>
                       </div>
                     )}
                   </div>
-                  <div className="flex-1">
-                    <div className="font-bold text-slate-900">{item.gameId.title}</div>
-                    {item.selectedOptions && Object.keys(item.selectedOptions).length > 0 && (
-                      <div className="text-xs text-slate-500">
-                        {Object.entries(item.selectedOptions).map(([k, v]) => v).join(' | ')}
-                      </div>
-                    )}
-                    <div className="text-sm text-slate-600">تعداد: {item.quantity}</div>
-                  </div>
-                  <div className="text-left">
-                    <div className="font-bold text-slate-900">{formatToman(item.pricePaid * item.quantity)}</div>
-                    <div className="text-xs text-slate-500">تومان</div>
-                  </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
 
             <div className="mt-4 flex justify-between border-t border-slate-100 pt-4 text-lg font-black text-slate-900">

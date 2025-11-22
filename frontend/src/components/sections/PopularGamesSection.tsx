@@ -97,12 +97,12 @@ export const PopularGamesSection = () => {
               key={game.id}
               game={{
                 id: game.id,
-                slug: game.slug,
+                slug: game.slug || game.id,
                 cover: game.cover,
                 price: game.price,
                 platform: game.platform,
                 title: game.title,
-                tag: 'Top'
+                tag: 'Popular'
               } satisfies CompactGame}
             />
           ))}

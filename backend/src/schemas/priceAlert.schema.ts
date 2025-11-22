@@ -6,9 +6,7 @@ export const createPriceAlertSchema = z.object({
   body: z.object({
     gameId: z.string().min(1, 'شناسه بازی الزامی است'),
     targetPrice: z.number().positive('قیمت هدف باید مثبت باشد'),
-    channel: z.enum(['email', 'telegram'], {
-      errorMap: () => ({ message: 'کانال باید email یا telegram باشد' })
-    }),
+    channel: z.enum(['email', 'telegram']),
     destination: z.string().min(1, 'مقصد اعلان الزامی است')
   }),
   query: empty,

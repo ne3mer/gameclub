@@ -149,6 +149,12 @@ export type AdminOrder = {
     selectedOptions?: Record<string, string>;
     quantity: number;
     pricePaid: number;
+    warranty?: {
+      status: 'active' | 'expired' | 'voided';
+      startDate?: string;
+      endDate?: string;
+      description?: string;
+    };
   }>;
   deliveryInfo?: {
     message?: string;
@@ -201,4 +207,50 @@ export type HomeContentState = {
   spotlights: HomeSpotlight[];
   trustSignals: HomeTrustSignal[];
   testimonials: HomeTestimonial[];
+};
+
+export type UserInsights = {
+  user: {
+    id: string;
+    name?: string;
+    email: string;
+    phone?: string;
+    telegram?: string;
+    role: 'user' | 'admin';
+    createdAt: string;
+    updatedAt: string;
+  };
+  orders: {
+    totalOrders: number;
+    paidOrders: number;
+    pendingOrders: number;
+    failedOrders: number;
+    totalSpent: number;
+    averageOrderValue: number;
+    lastOrderAt?: string;
+    history: Array<{
+      id: string;
+      orderNumber: string;
+      totalAmount: number;
+      paymentStatus: string;
+      fulfillmentStatus: string;
+      createdAt: string;
+    }>;
+  };
+  purchases: {
+    topCategories: Array<{ id: string; name: string; count: number }>;
+    topGames: Array<{ title: string; count: number }>;
+    platforms: Array<{ name: string; count: number }>;
+  };
+  analytics: {
+    pageViews: number;
+    clicks: number;
+    events: number;
+    lastVisitAt?: string;
+    topPages: Array<{ path: string; count: number }>;
+  };
+  alerts: {
+    priceAlerts: number;
+    unreadNotifications: number;
+  };
 };

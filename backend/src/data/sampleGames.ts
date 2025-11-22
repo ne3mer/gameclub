@@ -14,7 +14,10 @@ export const sampleGames: CreateGameInput[] = [
     coverUrl: 'https://images.igdb.com/igdb/image/upload/t_cover_big/co5s1k.webp',
     tags: ['Safe Account', 'DualSense'],
     options: [],
-    variants: []
+    variants: [],
+    releaseDate: new Date(),
+    featured: false,
+    onSale: false
   },
   {
     title: 'Marvel’s Spider-Man 2',
@@ -29,7 +32,10 @@ export const sampleGames: CreateGameInput[] = [
     coverUrl: 'https://images.igdb.com/igdb/image/upload/t_cover_big/co89xw.webp',
     tags: ['Open World', 'Ray Tracing'],
     options: [],
-    variants: []
+    variants: [],
+    releaseDate: new Date(),
+    featured: false,
+    onSale: false
   },
   {
     title: 'EA SPORTS FC™ 25',
@@ -44,7 +50,10 @@ export const sampleGames: CreateGameInput[] = [
     coverUrl: 'https://images.igdb.com/igdb/image/upload/t_cover_big/co8a3c.webp',
     tags: ['آنلاین', 'Budget Friendly'],
     options: [],
-    variants: []
+    variants: [],
+    releaseDate: new Date(),
+    featured: false,
+    onSale: false
   },
   {
     title: 'Elden Ring + Shadow of the Erdtree',
@@ -59,6 +68,9 @@ export const sampleGames: CreateGameInput[] = [
     coverUrl: 'https://images.igdb.com/igdb/image/upload/t_cover_big/co7zwj.webp',
     tags: ['RPG', 'Co-op'],
     options: [],
-    variants: []
+    variants: [],
+    releaseDate: new Date(),
+    featured: false,
+    onSale: false
   }
 ];

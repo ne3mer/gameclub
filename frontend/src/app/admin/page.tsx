@@ -269,13 +269,15 @@ export default function AdminDashboard() {
           color="amber"
           loading={loading}
         />
-        <StatCard
-          label="کل درآمد"
-          value={formatToman(stats.totalRevenue)}
-          icon="gem"
-          color="rose"
-          loading={loading}
-        />
+        <Link href="/admin/arena/tournaments">
+          <StatCard
+            label="تورنمنت‌های فعال"
+            value="12"
+            icon="award"
+            color="purple"
+            loading={false}
+          />
+        </Link>
         <StatCard
           label="کاربران جدید"
           value={stats.newUsers}
@@ -463,6 +465,18 @@ export default function AdminDashboard() {
             <div>
               <p className="text-sm font-black text-slate-900">بازاریابی</p>
               <p className="text-xs text-slate-500 mt-0.5">کمپین و تبلیغات</p>
+            </div>
+          </Link>
+          <Link
+            href="/admin/arena/tournaments"
+            className="flex items-center gap-3 rounded-2xl border-2 border-pink-200 bg-gradient-to-br from-white to-pink-50/50 p-5 hover:border-pink-300 hover:shadow-lg hover:scale-105 transition-all duration-200 group"
+          >
+            <div className="rounded-xl bg-gradient-to-br from-purple-500 to-pink-500 p-3 group-hover:scale-110 transition-transform shadow-lg shadow-purple-500/30">
+              <Icon name="award" size={20} className="text-white" />
+            </div>
+            <div>
+              <p className="text-sm font-black text-slate-900">آرنا</p>
+              <p className="text-xs text-slate-500 mt-0.5">مدیریت تورنمنت‌ها</p>
             </div>
           </Link>
         </div>

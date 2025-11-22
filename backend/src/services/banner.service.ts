@@ -85,7 +85,7 @@ export const getBannersForPage = async (page: string, userId?: string, userRole?
     
     // Check user role
     if (rules.showToRoles && rules.showToRoles.length > 0 && userRole) {
-      if (!rules.showToRoles.includes(userRole)) return false;
+      if (!rules.showToRoles.includes(userRole as any)) return false;
     }
     
     // Check view/click limits

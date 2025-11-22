@@ -69,4 +69,11 @@ router.post(
   orderController.verifyPayment
 );
 
+// Update warranty (admin only)
+router.patch(
+  '/:id/items/:itemId/warranty',
+  adminAuth,
+  orderController.updateWarranty
+);
+
 export default router;
