@@ -451,7 +451,7 @@ export default function AccountPage() {
       </section>
 
       {/* Quick Track Section */}
-      <section>
+      <section id="track">
         <header className="mb-6">
           <p className="text-xs text-slate-500">پیگیری خودکار</p>
           <h2 className="text-lg font-bold text-slate-900">پیگیری سفارشات</h2>

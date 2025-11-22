@@ -11,6 +11,7 @@ const links = [
   { href: '/', label: 'خانه', icon: 'home' },
   { href: '/games', label: 'کاتالوگ بازی', icon: 'gamepad' },
   { href: '/arena', label: 'آرنا', icon: 'trophy' },
+  { href: '/account#track', label: 'پیگیری سفارش', icon: 'package' },
   { href: '/about', label: 'درباره ما', icon: 'users' },
   { href: '/policies', label: 'قوانین', icon: 'file' }
 ];
