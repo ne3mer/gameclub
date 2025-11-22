@@ -25,6 +25,7 @@ type RawOrderItem = {
   gameId?: {
     title?: string;
     name?: string;
+    productType?: string;
   };
   variantId?: string;
   selectedOptions?: Record<string, string>;
@@ -208,6 +209,7 @@ export default function AccountPage() {
             items: (order.items ?? []).map((item, idx) => ({
               id: item.id ?? item._id ?? `${order.id ?? index}-${idx}`,
               gameTitle: item.gameId?.title ?? item.gameId?.name ?? 'بازی',
+              productType: item.gameId?.productType,
               variantId: item.variantId,
               selectedOptions: item.selectedOptions,
               quantity: item.quantity ?? 1,
@@ -474,12 +476,12 @@ export default function AccountPage() {
         <ArenaSettingsSection />
       </section>
 
-      {/* My Games Section */}
+      {/* My Games Section (Digital) */}
       <section>
         <header className="mb-6 flex items-center justify-between">
           <div>
             <p className="text-xs text-slate-500">کتابخانه من</p>
-            <h2 className="text-lg font-bold text-slate-900">بازی‌های خریداری شده</h2>
+            <h2 className="text-lg font-bold text-slate-900">بازی‌های دیجیتال</h2>
           </div>
         </header>
         
@@ -488,7 +490,25 @@ export default function AccountPage() {
             در حال بارگذاری بازی‌ها...
           </div>
         ) : (
-          <PurchasedGamesList orders={orders} />
+          <DigitalLibrarySection orders={orders} />
+        )}
+      </section>
+
+      {/* Physical Orders Section */}
+      <section>
+        <header className="mb-6 flex items-center justify-between">
+          <div>
+            <p className="text-xs text-slate-500">سفارش‌های فیزیکی</p>
+            <h2 className="text-lg font-bold text-slate-900">پیگیری مرسولات</h2>
+          </div>
+        </header>
+        
+        {ordersLoading ? (
+          <div className="rounded-2xl border border-slate-100 bg-slate-50 py-10 text-center text-sm text-slate-500">
+            در حال بارگذاری سفارش‌ها...
+          </div>
+        ) : (
+          <PhysicalOrdersSection orders={orders} />
         )}
       </section>
 
@@ -1030,7 +1050,7 @@ const AccountAuthGate = () => (
   </div>
 );
 
-const PurchasedGamesList = ({ orders }: { orders: AdminOrder[] }) => {
+const DigitalLibrarySection = ({ orders }: { orders: AdminOrder[] }) => {
   const [selectedGame, setSelectedGame] = useState<any>(null);
   const [showMessagesModal, setShowMessagesModal] = useState(false);
 
@@ -1038,13 +1058,15 @@ const PurchasedGamesList = ({ orders }: { orders: AdminOrder[] }) => {
     return orders
       .filter((o) => o.paymentStatus === 'paid')
       .flatMap((o) =>
-        o.items.map((item) => ({
-          ...item,
-          purchaseDate: o.createdAt,
-          orderId: o.id,
-          orderNumber: o.orderNumber,
-          deliveryInfo: o.deliveryInfo
-        }))
+        o.items
+          .filter((item) => !item.productType || item.productType === 'digital_game' || item.productType === 'digital_content')
+          .map((item) => ({
+            ...item,
+            purchaseDate: o.createdAt,
+            orderId: o.id,
+            orderNumber: o.orderNumber,
+            deliveryInfo: o.deliveryInfo
+          }))
       )
       .sort((a, b) => new Date(b.purchaseDate).getTime() - new Date(a.purchaseDate).getTime());
   }, [orders]);
@@ -1057,7 +1079,7 @@ const PurchasedGamesList = ({ orders }: { orders: AdminOrder[] }) => {
   if (games.length === 0) {
     return (
       <div className="rounded-2xl border border-slate-100 bg-slate-50 py-10 text-center text-sm text-slate-500">
-        هنوز بازی خریداری نکرده‌اید.
+        هنوز بازی دیجیتالی خریداری نکرده‌اید.
       </div>
     );
   }
@@ -1084,6 +1106,82 @@ const PurchasedGamesList = ({ orders }: { orders: AdminOrder[] }) => {
         />
       )}
     </>
+  );
+};
+
+const PhysicalOrdersSection = ({ orders }: { orders: AdminOrder[] }) => {
+  const physicalItems = useMemo(() => {
+    return orders
+      .filter((o) => o.paymentStatus === 'paid')
+      .flatMap((o) =>
+        o.items
+          .filter((item) => item.productType && item.productType !== 'digital_game' && item.productType !== 'digital_content')
+          .map((item) => ({
+            ...item,
+            purchaseDate: o.createdAt,
+            orderId: o.id,
+            orderNumber: o.orderNumber,
+            fulfillmentStatus: o.fulfillmentStatus,
+            deliveryInfo: o.deliveryInfo
+          }))
+      )
+      .sort((a, b) => new Date(b.purchaseDate).getTime() - new Date(a.purchaseDate).getTime());
+  }, [orders]);
+
+  if (physicalItems.length === 0) {
+    return (
+      <div className="rounded-2xl border border-slate-100 bg-slate-50 py-10 text-center text-sm text-slate-500">
+        هنوز محصول فیزیکی خریداری نکرده‌اید.
+      </div>
+    );
+  }
+
+  return (
+    <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+      {physicalItems.map((item, idx) => (
+        <div key={`${item.orderId}-${idx}`} className="rounded-3xl border border-slate-100 bg-white p-5 shadow-sm">
+          <div className="mb-4 flex items-start justify-between">
+            <div className="flex items-center gap-3">
+              <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-slate-50 text-slate-400">
+                <Icon name="package" size={24} />
+              </div>
+              <div>
+                <h3 className="font-bold text-slate-900 line-clamp-1">{item.gameTitle}</h3>
+                <p className="text-xs text-slate-500">سفارش {item.orderNumber}</p>
+              </div>
+            </div>
+            <span className={statusChip('fulfillment', item.fulfillmentStatus)}>
+              {fulfillmentLabels[item.fulfillmentStatus] ?? item.fulfillmentStatus}
+            </span>
+          </div>
+
+          <div className="space-y-3 rounded-2xl bg-slate-50 p-4 text-xs">
+            <div className="flex justify-between text-slate-600">
+              <span>تعداد:</span>
+              <span className="font-bold">{item.quantity} عدد</span>
+            </div>
+            <div className="flex justify-between text-slate-600">
+              <span>تاریخ خرید:</span>
+              <span className="font-bold">{new Date(item.purchaseDate).toLocaleDateString('fa-IR')}</span>
+            </div>
+            {item.deliveryInfo?.message && (
+              <div className="mt-2 border-t border-slate-200 pt-2">
+                <p className="font-bold text-slate-700 mb-1">وضعیت ارسال:</p>
+                <p className="text-slate-600 leading-relaxed">{item.deliveryInfo.message}</p>
+              </div>
+            )}
+          </div>
+          
+          <Link 
+            href={`/orders/${item.orderId}`}
+            className="mt-4 flex w-full items-center justify-center gap-2 rounded-xl border border-slate-200 py-2.5 text-xs font-bold text-slate-600 hover:bg-slate-50 transition"
+          >
+            <span>مشاهده جزئیات</span>
+            <Icon name="arrow-left" size={14} />
+          </Link>
+        </div>
+      ))}
+    </div>
   );
 };
 

@@ -10,6 +10,7 @@ import { PopularGamesSection } from "@/components/sections/PopularGamesSection";
 import { CategoriesSection, type CategoryHighlight } from "@/components/sections/CategoriesSection";
 import { TrustSection } from "@/components/sections/TrustSection";
 import { TestimonialsSection } from "@/components/sections/TestimonialsSection";
+import { ProductShowcaseSection } from "@/components/sections/ProductShowcaseSection";
 import { SiteFooter } from "@/components/layout/SiteFooter";
 import { defaultBannerContent, type BannerContent } from "@/data/marketing";
 import {
@@ -71,13 +72,26 @@ type BackendGame = {
   tags: string[];
 };
 
+const fetchGamesByType = async (type: string, limit: number = 4): Promise<BackendGame[]> => {
+  try {
+    const response = await fetch(
+      `${API_BASE_URL}/api/games?productType=${type}&sort=-createdAt&limit=${limit}`,
+      { next: { revalidate: 60 } }
+    );
+    if (!response.ok) throw new Error(`Failed to load ${type} games`);
+    const payload = await response.json();
+    return payload?.data ?? [];
+  } catch (error) {
+    console.warn(`${type} unavailable:`, error);
+    return [];
+  }
+};
+
 const fetchFeaturedGames = async (): Promise<BackendGame[]> => {
   try {
     const response = await fetch(
       `${API_BASE_URL}/api/games?sort=-createdAt&limit=3`,
-      {
-        next: { revalidate: 60 },
-      }
+      { next: { revalidate: 60 } }
     );
     if (!response.ok) throw new Error("Failed to load games");
     const payload = await response.json();
@@ -257,11 +271,13 @@ function ProductShowcase({ games }: { games: BackendGame[] }) {
 }
 
 export default async function HomePage() {
-  const [marketingSnapshot, homeSettings, featuredGames, categories] = await Promise.all([
+  const [marketingSnapshot, homeSettings, featuredGames, categories, gearProducts, collectibleProducts] = await Promise.all([
     fetchMarketingSnapshot(),
     fetchHomeSettings(),
     fetchFeaturedGames(),
     fetchCategories(),
+    fetchGamesByType('gaming_gear', 4),
+    fetchGamesByType('action_figure', 4),
   ]);
 
   const bannerContent = marketingSnapshot?.settings?.bannerContent ?? defaultBannerContent;
@@ -307,6 +323,30 @@ export default async function HomePage() {
           <section className="w-full">
             <NewArrivalsSection />
           </section>
+
+          {/* Gaming Gear Showcase */}
+          {gearProducts.length > 0 && (
+            <section className="w-full">
+              <ProductShowcaseSection 
+                title="تجهیزات حرفه‌ای" 
+                subtitle="ارتقای سطح بازی با بهترین تجهیزات"
+                products={gearProducts as any}
+                href="/games?type=gaming_gear"
+              />
+            </section>
+          )}
+
+          {/* Collectibles Showcase */}
+          {collectibleProducts.length > 0 && (
+            <section className="w-full">
+              <ProductShowcaseSection 
+                title="فیگور و کلکسیونی" 
+                subtitle="مجموعه‌ای بی‌نظیر برای کلکسیونرها"
+                products={collectibleProducts as any}
+                href="/games?type=action_figure"
+              />
+            </section>
+          )}
 
           {/* Popular Games */}
           <section className="w-full">

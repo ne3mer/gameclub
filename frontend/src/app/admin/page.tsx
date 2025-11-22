@@ -6,6 +6,8 @@ import { formatToman } from '@/lib/format';
 import { API_BASE_URL, ADMIN_API_KEY, adminHeaders } from '@/lib/api';
 import type { AdminOrder } from '@/types/admin';
 import { Icon } from '@/components/icons/Icon';
+import { InventoryHealthWidget } from '@/components/admin/InventoryHealthWidget';
+import { SalesByCategoryWidget } from '@/components/admin/SalesByCategoryWidget';
 
 type DashboardStats = {
   ordersToday: number;
@@ -286,6 +288,12 @@ export default function AdminDashboard() {
           loading={loading}
         />
       </section>
+
+      {/* Widgets Grid */}
+      <div className="mb-8 grid gap-6 lg:grid-cols-2">
+        <InventoryHealthWidget />
+        <SalesByCategoryWidget />
+      </div>
 
       {/* Main Content Grid */}
       <div className="grid gap-6 lg:grid-cols-3">

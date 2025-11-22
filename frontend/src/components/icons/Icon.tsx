@@ -6,7 +6,6 @@ import {
   ShoppingCart,
   Users,
   Home,
-  Image as ImageIcon,
   Megaphone,
   Plus,
   TrendingUp,
@@ -62,7 +61,10 @@ import {
   Layers,
   Globe,
   Info,
-  Truck
+  Truck,
+  Cpu,
+  ShoppingBag,
+  Image as ImageIcon
 } from 'lucide-react';
 import { type LucideIcon } from 'lucide-react';
 
@@ -128,7 +130,9 @@ type IconName =
   | 'layers'
   | 'globe'
   | 'info'
-  | 'truck';
+  | 'truck'
+  | 'cpu'
+  | 'shopping-bag';
 
 const iconMap: Record<IconName, LucideIcon> = {
   dashboard: LayoutDashboard,
@@ -192,7 +196,9 @@ const iconMap: Record<IconName, LucideIcon> = {
   layers: Layers,
   globe: Globe,
   info: Info,
-  truck: Truck
+  truck: Truck,
+  cpu: Cpu,
+  'shopping-bag': ShoppingBag
 };
 
 interface IconProps {

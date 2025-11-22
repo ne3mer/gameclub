@@ -27,12 +27,16 @@ const mapBackendGameToCard = (game: BackendGame): GameCardContent => ({
   title: game.title,
   platform: game.platform || 'PC', // Default to PC if undefined
   price: game.basePrice,
-  region: game.regionOptions[0] || 'R2',
+  basePrice: game.basePrice,
+  finalPrice: game.basePrice,
+  monthlyPrice: Math.round(game.basePrice * 0.3),
+  region: game.regionOptions?.[0] ?? 'Global',
   safe: game.safeAccountAvailable,
-  monthlyPrice: Math.floor(game.basePrice * 0.3),
-  category: game.genre[0]?.toLowerCase() || 'action',
-  rating: 0, // Will be fetched dynamically via useGameRating hook
-  cover: game.coverUrl || 'https://images.igdb.com/igdb/image/upload/t_cover_big/nocover.webp',
+  category: game.genre?.[0] ?? 'general',
+  rating: 4.5,
+  cover: game.coverUrl || '',
+  coverUrl: game.coverUrl || '',
+  description: game.description,
   productType: game.productType as any
 });
 

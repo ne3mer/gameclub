@@ -59,10 +59,12 @@ const mapBackendGameToCard = (game: any): GameCardContent => {
     slug: game?.slug ?? game?._id?.toString() ?? '',
     title: game?.title ?? 'بازی نامشخص',
     platform: game?.platform ?? 'PS5',
-    price: basePrice,
-    region: game?.regionOptions?.[0] ?? game?.region ?? 'R2',
-    safe: Boolean(game?.safeAccountAvailable ?? game?.safe),
-    monthlyPrice: Math.round(basePrice * 0.3),
+    price: game?.price ?? 0,
+    basePrice: game?.price ?? 0,
+    finalPrice: game?.price ?? 0,
+    region: game?.region ?? 'Global',
+    safe: true,
+    monthlyPrice: 0,
     category: Array.isArray(game?.genre) && game.genre.length > 0
       ? String(game.genre[0]).toLowerCase()
       : 'general',

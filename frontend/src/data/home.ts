@@ -14,7 +14,7 @@ export type ProductCardContent = {
   tags?: string[];
   
   // Multi-product fields
-  productType?: 'digital_game' | 'physical_product' | 'digital_content' | 'gaming_gear' | 'collectible' | 'bundle';
+  productType?: 'digital_game' | 'physical_product' | 'digital_content' | 'gaming_gear' | 'collectible' | 'bundle' | 'action_figure' | 'collectible_card';
   inventory?: {
     status: 'in_stock' | 'low_stock' | 'out_of_stock';
     quantity: number;
@@ -23,6 +23,12 @@ export type ProductCardContent = {
     requiresShipping: boolean;
     freeShipping: boolean;
   };
+  
+  // New standardized fields
+  basePrice: number;
+  finalPrice: number;
+  coverUrl?: string;
+  customFields?: Record<string, any>;
 };
 
 export type GameCardContent = ProductCardContent; // Alias for backward compatibility
@@ -33,52 +39,60 @@ export const popularGames: GameCardContent[] = [
     title: 'God of War Ragnarök',
     platform: 'PS5',
     price: 2499000,
+    basePrice: 2499000,
+    finalPrice: 2499000,
     monthlyPrice: 749000,
     region: 'R2',
     safe: true,
     category: 'story',
     rating: 4.9,
-    cover:
-      'https://images.igdb.com/igdb/image/upload/t_cover_big/co5s1k.webp'
+    cover: 'https://images.igdb.com/igdb/image/upload/t_cover_big/co5s1k.webp',
+    coverUrl: 'https://images.igdb.com/igdb/image/upload/t_cover_big/co5s1k.webp'
   },
   {
     id: 'ea-fc-25',
     title: 'EA SPORTS FC™ 25',
     platform: 'PS5',
     price: 2199000,
+    basePrice: 2199000,
+    finalPrice: 2199000,
     monthlyPrice: 649000,
     region: 'TR',
     safe: false,
     category: 'sports',
     rating: 4.5,
-    cover:
-      'https://images.igdb.com/igdb/image/upload/t_cover_big/co8a3c.webp'
+    cover: 'https://images.igdb.com/igdb/image/upload/t_cover_big/co8a3c.webp',
+    coverUrl: 'https://images.igdb.com/igdb/image/upload/t_cover_big/co8a3c.webp'
   },
   {
     id: 'elden-ring',
     title: 'Elden Ring Shadow of the Erdtree',
     platform: 'PS5',
     price: 2799000,
+    basePrice: 2799000,
+    finalPrice: 2799000,
     monthlyPrice: 799000,
     region: 'R1',
     safe: true,
     category: 'action',
     rating: 4.8,
-    cover:
-      'https://images.igdb.com/igdb/image/upload/t_cover_big/co7zwj.webp'
+    cover: 'https://images.igdb.com/igdb/image/upload/t_cover_big/co7zwj.webp',
+    coverUrl: 'https://images.igdb.com/igdb/image/upload/t_cover_big/co7zwj.webp'
   },
   {
     id: 'gran-turismo-7',
     title: 'Gran Turismo 7',
     platform: 'PS5',
     price: 1899000,
+    basePrice: 1899000,
+    finalPrice: 1899000,
     monthlyPrice: 559000,
     region: 'TR',
     safe: true,
     category: 'kids',
     rating: 4.4,
-    cover:
-      'https://images.igdb.com/igdb/image/upload/t_cover_big/co4edu.webp'
+    cover: 'https://images.igdb.com/igdb/image/upload/t_cover_big/co4edu.webp',
+    coverUrl: 'https://images.igdb.com/igdb/image/upload/t_cover_big/co4edu.webp'
   }
 ];
 

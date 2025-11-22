@@ -145,6 +145,7 @@ export type AdminOrder = {
   items: Array<{
     id: string;
     gameTitle: string;
+    productType?: string;
     variantId?: string;
     selectedOptions?: Record<string, string>;
     quantity: number;
