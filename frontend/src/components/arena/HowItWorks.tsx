@@ -3,7 +3,15 @@
 import { motion } from 'framer-motion';
 import { Icon } from '@/components/icons/Icon';
 
-const steps = [
+type IconName = 'user' | 'search' | 'credit-card' | 'game' | 'upload' | 'award';
+
+const steps: Array<{
+  number: number;
+  title: string;
+  description: string;
+  icon: IconName;
+  color: string;
+}> = [
   {
     number: 1,
     title: 'ثبت‌نام کنید',
