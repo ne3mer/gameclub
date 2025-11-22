@@ -11,6 +11,7 @@ import { Icon } from '@/components/icons/Icon';
 import { getAuthToken } from '@/lib/auth';
 import MyTournamentsSection from '@/components/dashboard/MyTournamentsSection';
 import ArenaSettingsSection from '@/components/dashboard/ArenaSettingsSection';
+import { QuickTrackWidget } from '@/components/dashboard/QuickTrackWidget';
 
 type ProfileState = {
   name?: string;
@@ -447,6 +448,15 @@ export default function AccountPage() {
       {/* Notifications Section */}
       <section>
         <NotificationCenter />
+      </section>
+
+      {/* Quick Track Section */}
+      <section>
+        <header className="mb-6">
+          <p className="text-xs text-slate-500">پیگیری خودکار</p>
+          <h2 className="text-lg font-bold text-slate-900">پیگیری سفارشات</h2>
+        </header>
+        <QuickTrackWidget />
       </section>
 
       {/* My Tournaments Section */}
